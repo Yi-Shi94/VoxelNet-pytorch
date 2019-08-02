@@ -1,0 +1,22 @@
+range_x:
+    - 0
+    - 70
+ 
+range_y:
+    - -40
+    - 40
+
+range_z:
+    - -3
+    - 1
+
+pt_thres_per_vox: 40
+vox_d: 0.4
+vox_w: 0.2
+vox_h: 0.2
+
+classes:
+    - "Car"
+    - "Cyclist"
+    - "Van"
+    - "Pedestrian"
