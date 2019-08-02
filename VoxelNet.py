@@ -150,14 +150,12 @@ class VoxelNet(nn.Module):
         self.svfe = SVFE()
         self.cml = CML()
         self.rpn = RPN()
-
+        
+        
     def voxel_indexing(self, sparse_features, coords):
         dim = sparse_features.shape[-1]
-
         dense_feature = Variable(torch.zeros(dim, cfg.N, cfg.D, cfg.H, cfg.W).cuda())
-
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features
-
         return dense_feature.transpose(0, 1)
 
     def forward(self, voxel_features, voxel_coords):
@@ -165,13 +163,9 @@ class VoxelNet(nn.Module):
         # feature learning network
         vwfs = self.svfe(voxel_features)
         vwfs = self.voxel_indexing(vwfs,voxel_coords)
-
         # convolutional middle network
         cml_out = self.cml(vwfs)
-
         # region proposal network
-
         # merge the depth and feature dim into one, output probability score map and regression map
         psm,rm = self.rpn(cml_out.view(cfg.N,-1,cfg.H, cfg.W))
-
         return psm, rm

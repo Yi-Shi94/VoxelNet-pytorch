@@ -16,19 +16,18 @@ import torch
 import cv2
 import yaml
 
-class VoxDataset(data.Dataset):
+class KITDataset(data.Dataset):
     def __init__(self, conf_dict, root_path='./data/dataset/voxel_mini_data',setting='train',data_type='velodyne_train'):
-        yamlPath = "configure.yaml"
         
+        self.data_root_path = root_path
         self.data_type = data_type
-        self.root_pth = root
         self.record_path = os.path.join('./data',setting+'.txt)
         with open(self.record_path) as f:
-            self.file_list = f.read().splitlines()
- 
-        with open(os.path.join(self.data_path, '%s.txt' % set)) as f:
-            self.file_list = f.read().splitlines()
-        
+            lines = f.readlines()                            
+            self.file_paths = lines.split('\n')
+             
+                          
+                                  
         self.range_x=conf_dict['range_x']
         self.range_y=conf_dict['range_y']
         self.range_z=conf_dict['range_z']
@@ -37,12 +36,18 @@ class VoxDataset(data.Dataset):
         self.vox_height = conf_dict['vox_h']
         self.classes = conf_dict['classes'] 
         self.pt_thres_per_vox = conf_dict['pt_thres_per_vox'] 
-         #tobedone
-        self.anchors = cfg.anchors.reshape(-1,7)
-        self.feature_map_shape = (int(cfg.H / 2), int(cfg.W / 2))
-        self.anchors_per_position = cfg.anchors_per_position
-        self.pos_threshold = cfg.pos_threshold
-        self.neg_threshold = cfg.neg_threshold
+        self.anchors = conf_dict['anchors']
+        self.anchors_per_vox = conf_dict['anchors_per_vox']
+        self.pos_threshold = conf_dict['pos_threshold']
+        self.neg_threshold = conf_dict['neg_threshold']
+                                        
+        self.H = (max(self.range_x)-min(self.range_x))//self.vox_height
+        self.W = (max(self.range_y)-min(self.range_y))//self.vox_width
+        self.D = (max(self.range_z)-min(self.range_z))//self.vox_depth
+        self.anchors = self.anchors.reshape(-1,7)
+        self.feature_map_shape = (int(self.H / 2), int(self.W / 2))
+
+                        
 
     def cal_target(self, gt_box3d):
         # Input:
@@ -143,7 +148,7 @@ class VoxDataset(data.Dataset):
     def aug(lidar, gt_box3d):
         mode = random.randint(0,5)
         #flip
-        if mode == 0:
+        #if mode == 0:
                                            
         
                                         

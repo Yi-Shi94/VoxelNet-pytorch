@@ -63,22 +63,7 @@ def read_label(file_path):
         coords_3d = np.concatenate([lines[:,:1],lines[:,8:-1],lines[:,-1:]],1)
         bbox_3d = coords_3d[coords_keep_indices,:]
         return bbox_2d,bbox_3d
-'''
-def read_label_3d(file_path):
-    with open(file_path,'r') as f:
-        lines = f.readlines()
-        bbox_3d = np.array(list(map(lambda x:x.split(),lines)))
-        
-    gt_boxes3d_corner = []
-    num_detection = len(lines)
-    for j in range(num_detection):
-        obj = lines[j].strip().split(' ')
-        obj_class = obj[0].strip()
-        box3d_corner = box3d_cam_to_velo(obj[8:], Tr)
-        gt_boxes3d_corner.append(box3d_corner)
-    gt_boxes3d_corner = np.array(gt_boxes3d_corner).reshape(-1,8,3)
-    return gt_boxes3d_corner
-'''
+
 def generate_file_path(file_index):
     parent_pth = "./data/dataset/voxel_mini_data"
     file_name = "%06d"%(file_index)
