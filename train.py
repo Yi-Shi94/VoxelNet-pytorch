@@ -31,7 +31,7 @@ f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
-if conf_dict['cuda']==1:
+if conf_dict['if_cuda']==1:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     
 def weights_init(m):
