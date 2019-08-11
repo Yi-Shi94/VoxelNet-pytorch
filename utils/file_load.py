@@ -22,7 +22,7 @@ def prepare_velodyne_points(pts3d_raw,range_x = None,range_y = None, range_z = N
     pts3d = pts3d_raw
     indices = pts3d[:, 3] >= 0
     
-    print("range",range_x,range_y,range_z,len(indices),len(pts3d))
+    #print("range",range_x,range_y,range_z,len(indices),len(pts3d))
     if range_x!=None:
         indices_x = np.logical_and((pts3d[:,0]>=min(range_x)),(pts3d[:,0]<=max(range_x)))
         indices = np.logical_and(indices,indices_x)
@@ -79,7 +79,7 @@ def read_label(file_path,Tr,classes):
                 continue
             box3d_corner = box3d_cam_to_velo(obj[8:], Tr)
 
-        gt_boxes3d_corner.append(box3d_corner)
+            gt_boxes3d_corner.append(box3d_corner)
         gt_boxes3d_corner = np.array(gt_boxes3d_corner).reshape(-1,8,3)
         return gt_boxes3d_corner
     

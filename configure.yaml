@@ -4,7 +4,7 @@ if_continued: 0
 lr: 0.01
 alpha: 0.5
 beta: 1
-epoch: 36
+epoch: 50
 chk_pth: "./checkpoints"
 range_x:
     - 0
