@@ -6,7 +6,7 @@ from box_overlaps import *
 from data_aug import aug_data
 import yaml
 
-yamlPath = "../configure.yaml"
+yamlPath = "./configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
