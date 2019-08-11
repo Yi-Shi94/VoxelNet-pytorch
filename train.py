@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import os
 import sys
 import yaml
+import tqdm
 import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
@@ -63,12 +64,9 @@ def detection_collate(batch):
         images.append(sample[5])
         calibs.append(sample[6])
         ids.append(sample[7])
-    return np.concatenate(voxel_features), \
-           np.concatenate(voxel_coords), \
-           np.array(pos_equal_one),\
-           np.array(neg_equal_one),\
-           np.array(targets),\
-           images, calibs, ids
+    return np.concatenate(voxel_features), np.concatenate(voxel_coords), \
+           np.array(pos_equal_one),np.array(neg_equal_one),\
+           np.array(targets), images, calibs, ids
 
 if_continued = True if conf_dict['if_continued'] == "1" else False
 if_cuda = True if conf_dict["if_cuda"] == "1" else False
@@ -78,8 +76,7 @@ a = eval(conf_dict["alpha"])
 b = eval(conf_dict["beta"])
 epoch_num = eval(conf_dict["epoch"])
 chk_pth = conf_dict["chk_pth"]
-print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_alpha:{}, loss_beta:{}," \
-      .format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, loss_alpha, loss_beta))
+print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_alpha:{}, loss_beta:{},".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, loss_alpha, loss_beta))
 
 print("----------------------------------------\n")
 kit_dataset= KITDataset(conf_dict=conf_dict)
@@ -113,7 +110,7 @@ def train():
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
-        for batch_index,contents in enumerate(data_loader):
+        for batch_index,contents in tqdm(enumerate(data_loader)):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
@@ -133,12 +130,13 @@ def train():
             optimizer.step()
             if epoch % 4 ==0:
                  torch.save(model.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
-            if batch_per_epoch:
-            print('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.' % (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
-            res = 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f' % \
+            if batch_index % 10 == 0:
+                res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
+                  (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
+                res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
                   (loss.data[0], conf_loss.data[0], reg_loss.data[0])
-            print(res)
-            log_file.write(res)
+                print(res)
+                log_file.write(res)
     
 if __name__ == '__main__':
     train()

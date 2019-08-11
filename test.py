@@ -8,6 +8,35 @@ from glob import glob
 import torch
 import yaml
 import utils
+import tdqm
+
+def detection_collate(batch):
+    voxel_features = []
+    voxel_coords = []
+    pos_equal_one = []
+    neg_equal_one = []
+    targets = []
+    images = []
+    calibs = []
+    ids = []
+    
+    for i, sample in enumerate(batch):
+        voxel_features.append(sample[0])
+        voxel_coords.append(
+            np.pad(sample[1], ((0, 0), (1, 0)),
+                mode='constant', constant_values=i))
+
+        pos_equal_one.append(sample[2])
+        neg_equal_one.append(sample[3])
+        targets.append(sample[4])
+
+        images.append(sample[5])
+        calibs.append(sample[6])
+        ids.append(sample[7])
+    return np.concatenate(voxel_features), np.concatenate(voxel_coords), \
+           np.array(pos_equal_one),np.array(neg_equal_one),\
+           np.array(targets), images, calibs, ids
+
 
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
@@ -19,6 +48,10 @@ chk_pth = conf_dict['chk_pth']
 if conf_dict['cuda']==1:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     
+kit_dataset= KITDataset(conf_dict=conf_dict,setting="val",data_type="velodyne_test")
+data_loader = data.DataLoader(kit_dataset, batch_size=4, num_workers=4, \
+                              collate_fn=detection_collate, shuffle=False, \
+                              pin_memory=True)
 net = VoxelNet()
 if if_cuda:
     net.cuda()
@@ -39,21 +72,28 @@ def test(mode="testing"):
     net.load_state_dict(torch.load(sorted(glob(chk_pth))[-1]))
     net.eval()
     
-    for i in files:
-        lidar_file = lidar_path + '/' + file[i] + '.bin'
-        calib_file = calib_path + '/' + file[i] + '.txt'
-        label_file = label_path + '/' + file[i] + '.txt'
-        image_file = image_path + '/' + file[i] + '.png'
-        
-        print("Processing: ", lidar_file)
-        lidar = np.fromfile(lidar_file, dtype=np.float32)
-        lidar = lidar.reshape((-1, 4))
-        
-        calib = load_kitti_calib(calib_file)
-        gt_box3d = load_kitti_label(label_file, calib['Tr_velo2cam'])
+    total_loss = 0
+    total_conf_loss = 0
+    total_reg_loss = 0
+    
+    for item in tqdm(data_loader):
+        voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = item
+        # wrapper to variable
+        voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
+        pos_equal_one = Variable(torch.cuda.FloatTensor(pos_equal_one))
+        neg_equal_one = Variable(torch.cuda.FloatTensor(neg_equal_one))
+        targets = Variable(torch.cuda.FloatTensor(targets))
         # filtering
-        lidar, gt_box3d = get_filtered_lidar(lidar, gt_box3d)
+        psm, rm = net(voxel_features, voxel_coords)
+        conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
+        loss = conf_loss + reg_loss
+        total_loss += loss
+        total_conf_loss += conf_loss
+        total_reg_loss += reg_loss
         
-        
+    print("=========================================================\n")
+    res = 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f' %(loss.data[0], conf_loss.data[0], reg_loss.data[0])
+    print(res)
+    
 if __name__ == '__main__':
     test()

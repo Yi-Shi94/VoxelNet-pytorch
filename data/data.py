@@ -20,6 +20,7 @@ import yaml
 class KITDataset(data.Dataset):
     def __init__(self, conf_dict, root_path='~/dataset/voxelnet',setting='train',data_type='velodyne_train'):
         
+        
         self.data_root_path = root_path
         self.data_type = data_type
         self.record_path = os.path.join(root_path,setting+'.txt)
@@ -165,7 +166,7 @@ class KITDataset(data.Dataset):
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         img = cv2.imread(image_file_path)  
         gt_box3d = read_label(label_file_path,T)        
-        if self.type == 'train':
+        if self.data_type == 'velodyne_train':
             # online data augmentation
             lidar, gt_box3d = aug_data(lidar, gt_box3d)
             # specify a range
@@ -175,6 +176,7 @@ class KITDataset(data.Dataset):
             # bounding-box encoding
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_list[i]
+        
         else:
             pass
 

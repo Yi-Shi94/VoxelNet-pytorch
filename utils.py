@@ -349,7 +349,6 @@ def load_kitti_label(label_file, Tr):
         lines = f.readlines()
 
     gt_boxes3d_corner = []
-
     num_obj = len(lines)
 
     for j in range(num_obj):
