@@ -8,6 +8,11 @@ f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
+def weights_init(m):
+    if isinstance(m, nn.Conv2d):
+        init.xavier_uniform(m.weight.data)
+        m.bias.data.zero_()
+        
 # conv2d + bn + relu
 class Conv2d(nn.Module):
     def __init__(self,in_channels,out_channels,k,s,p, activation=True, batch_norm=True):

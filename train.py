@@ -17,7 +17,7 @@ from data.data import KITDataset
 from box_overlaps import bbox_overlaps
 from data_aug import aug_data
 
-from VoxelNet import VoxelNet
+from VoxelNet import VoxelNet,weights_init
 from VoxelLoss import VoxelLoss
 
 import torch
@@ -26,15 +26,13 @@ import torch.backends.cudnn
 import torch.optim as optim
 import torch.nn.init as init
 
+
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
     
-def weights_init(m):
-    if isinstance(m, nn.Conv2d):
-        init.xavier_uniform(m.weight.data)
-        m.bias.data.zero_()
+
         
             
 def detection_collate(batch):
