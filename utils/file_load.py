@@ -39,6 +39,7 @@ def prepare_velodyne_points(pts3d_raw,range_x = None,range_y = None, range_z = N
 def read_cal(file_path):
     info_dict = {}
     with open(file_path,mode='r') as f:
+        
         lines = f.readlines()[:-1]
         items = list(map(lambda x:(x.split()[0][:-1],eval_lst(x.split()[1:])),lines))
         for i in range(0,4):
