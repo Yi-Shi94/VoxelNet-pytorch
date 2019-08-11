@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import os
 import sys
 from utils.file_load import *
-from utils.utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
+from utils.utils import get_filtered_lidar,box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
 from box_overlaps import bbox_overlaps
 from data_aug import aug_data
 
@@ -173,7 +173,7 @@ class KITDataset(data.Dataset):
             # online data augmentation
             lidars, gt_box3d = aug_data(lidars, gt_box3d)
             # specify a range
-            lidars, gt_box3d = utils.get_filtered_lidar(lidars, gt_box3d)
+            lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             # voxelize
             voxel_features, voxel_coords = self.voxelize(lidars)
             # bounding-box encoding
@@ -182,7 +182,7 @@ class KITDataset(data.Dataset):
         
        
         else:
-            lidars, gt_box3d = utils.get_filtered_lidar(lidars, gt_box3d)
+            lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(lidars)
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             
