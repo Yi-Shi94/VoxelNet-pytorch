@@ -165,10 +165,7 @@ def angle_in_limit(angle):
 def box3d_cam_to_velo(box3d, Tr):
 
     def project_cam2velo(cam, Tr):
-        T = np.zeros([4, 4], dtype=np.float32)
-        T[:3, :] = Tr
-        T[3, 3] = 1
-        T_inv = np.linalg.inv(T)
+        T_inv = np.linalg.inv(Tr)
         lidar_loc_ = np.dot(T_inv, cam)
         lidar_loc = lidar_loc_[:3]
         return lidar_loc.reshape(1, 3)
