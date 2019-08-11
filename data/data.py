@@ -169,24 +169,25 @@ class KITDataset(data.Dataset):
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         image = cv2.imread(image_file_path)  
         gt_box3d = read_label(label_file_path,T)        
-        if self.setting == 'train':
-            # online data augmentation
-            lidar, gt_box3d = aug_data(lidar, gt_box3d)
-            # specify a range
-            lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
-            # voxelize
-            voxel_features, voxel_coords = self.voxelize(vel)
-            # bounding-box encoding
-            pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
         
+            # online data augmentation
+        lidar, gt_box3d = aug_data(lidar, gt_box3d)
+            # specify a range
+        lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
+            # voxelize
+        voxel_features, voxel_coords = self.voxelize(vel)
+            # bounding-box encoding
+        pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
+        return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
+        
+        '''
         else:
             lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(vel)
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
-
+        '''
 
     def __len__(self):
         return len(self.file_paths)

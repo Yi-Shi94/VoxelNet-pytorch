@@ -72,7 +72,7 @@ if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 print("----------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict)
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=0, \
                               collate_fn=detection_collate, shuffle=True, \
                               pin_memory=False)
 
