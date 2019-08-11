@@ -73,7 +73,7 @@ if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 print("----------------------------------------\n")
 kit_dataset= KITDataset(conf_dict=conf_dict)
-data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
                               collate_fn=detection_collate, shuffle=True, \
                               pin_memory=False)
 
@@ -82,7 +82,7 @@ net = VoxelNet()
 if if_cuda:
     net.cuda()
     
-def train():
+def mytrain():
     log_file = open('./log.txt','w')
     net.train()
    
@@ -99,11 +99,11 @@ def train():
     optimizer = optim.SGD(net.parameters(), lr=0.01)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
-    batch_per_epoch = len(data_loader)//batch_size
+    batch_per_epoch = len(kit_data_loader)//batch_size
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
-        for batch_index,contents in enumerate(tqdm(data_loader)):
+        for batch_index,contents in enumerate(tqdm(kit_data_loader)):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
@@ -132,5 +132,5 @@ def train():
                 log_file.write(res)
     
 if __name__ == '__main__':
-    train()
+    mytrain()
       
