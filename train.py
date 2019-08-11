@@ -25,7 +25,7 @@ import torch.utils.data as data
 import torch.backends.cudnn
 import torch.optim as optim
 import torch.nn.init as init
-
+from torch.autograd import Variable
 
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
