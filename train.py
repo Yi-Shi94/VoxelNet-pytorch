@@ -32,9 +32,6 @@ f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
     
-
-        
-            
 def detection_collate(batch):
     voxel_features = []
     voxel_coords = []
@@ -106,7 +103,7 @@ def train():
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
-        for batch_index,contents in tqdm(enumerate(data_loader)):
+        for batch_index,contents in enumerate(tqdm(data_loader)):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
