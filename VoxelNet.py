@@ -1,8 +1,10 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+import torch.nn.init as init
 from torch.autograd import Variable
 import yaml
+
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
