@@ -26,7 +26,7 @@ class KITDataset(data.Dataset):
         self.record_path = os.path.join(root_path,setting+'.txt')
         with open(self.record_path) as f:
             lines = f.readlines()                            
-            self.file_paths = lines.split('\n')
+            self.file_paths = list(map(lambda x:x.strip('\n'),lines))
                           
         self.range_x=conf_dict['range_x']
         self.range_y=conf_dict['range_y']
