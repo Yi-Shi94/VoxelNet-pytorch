@@ -1,6 +1,6 @@
 if_cuda: 1
 batch_size: 16
-if_continue: 0
+if_continued: 0
 lr: 0.01
 alpha: 0.5
 beta: 1
