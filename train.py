@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import os
 import sys
 import yaml
-import tqdm
+from tqdm import tqdm
 import numpy as np
 from glob import glob
 
@@ -68,10 +68,9 @@ b = conf_dict["beta"]
 epoch_num = conf_dict["epoch"]
 chk_pth = conf_dict["chk_pth"]
 print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_param_alpha:{}, loss_param_beta:{},".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, a, b))
-print(type(chk_pth),type(epoch_num))
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-print("----------------------------------------\n")
+print("----------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict)
 kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
                               collate_fn=detection_collate, shuffle=True, \
