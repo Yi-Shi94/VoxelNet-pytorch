@@ -19,8 +19,9 @@ vox_height = conf_dict['vox_h']
 classes = conf_dict['classes'] 
 pt_thres_per_vox = conf_dict['pt_thres_per_vox'] 
 anchors_per_vox = conf_dict['anchors_per_vox']
-pos_threshold = conf_dict['pos_threshold']
-neg_threshold = conf_dict['neg_threshold']
+pos_threshold = conf_dict['iou_pos_threshold']
+neg_threshold = conf_dict['iou_neg_threshold']
+
 H = (max(range_x)-min(range_x))//vox_height
 W = (max(range_y)-min(range_y))//vox_width
 D = (max(range_z)-min(range_z))//vox_depth
@@ -103,7 +104,6 @@ def lidar_to_bev(lidar):
         density_image = density_image-np.min(density_image)
         density_image = (density_image/np.max(density_image)*255).astype(np.uint8)
         # top_image = np.dstack((top_image, top_image, top_image)).astype(np.uint8)
-
 
     return top, density_image
 

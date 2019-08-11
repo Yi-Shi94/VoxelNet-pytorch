@@ -37,8 +37,8 @@ class KITDataset(data.Dataset):
         self.classes = conf_dict['classes'] 
         self.pt_thres_per_vox = conf_dict['pt_thres_per_vox'] 
         self.anchors_per_vox = conf_dict['anchors_per_vox']
-        self.pos_threshold = conf_dict['pos_threshold']
-        self.neg_threshold = conf_dict['neg_threshold']
+        self.pos_threshold = conf_dict['iou_pos_threshold']
+        self.neg_threshold = conf_dict['iou_neg_threshold']
                                         
         self.H = (max(self.range_x)-min(self.range_x))//self.vox_height
         self.W = (max(self.range_y)-min(self.range_y))//self.vox_width
@@ -46,9 +46,9 @@ class KITDataset(data.Dataset):
        
         self.feature_map_shape = (int(self.H / 2), int(self.W / 2))
                                         
-        x = np.linspace(range_x[0]+self.vox_width, range_x[1]-self.vox_width, self.W/2)
-        y = np.linspace(range_y[0]+self.vox_height, range_x[1]-self.vox_height, self.H/2)
-        cx, cy = np.meshgrid(self.x, self.y)
+        x = np.linspace(self.range_x[0]+self.vox_width, self.range_x[1]-self.vox_width, self.W/2)
+        y = np.linspace(self.range_y[0]+self.vox_height, self.range_x[1]-self.vox_height, self.H/2)
+        cx, cy = np.meshgrid(x, y)
         cx = np.tile(cx[..., np.newaxis], 2)
         cy = np.tile(cy[..., np.newaxis], 2)
         cz = np.ones_like(cx) * (-1.0)
