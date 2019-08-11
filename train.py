@@ -9,7 +9,7 @@ import yaml
 import tqdm
 import numpy as np
 from glob import glob
-import matplotlib.pyplot as plt
+
 import cv2
 
 from utils.utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
