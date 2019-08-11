@@ -160,7 +160,7 @@ class KITDataset(data.Dataset):
                            
                                         
     def __getitem__(self, index):
-        image_file_path, calib_file_path, lidar_file_path, label_file_path = generate_file_path(index)
+        image_file_path, calib_file_path, lidar_file_path, label_file_path = generate_file_path(index,self.data_root_path)
         T = read_cal(calib_file_path)['Tr_velo2cam']
         lidars = read_velodyne_points(lidar_file_path)
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
