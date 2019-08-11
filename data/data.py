@@ -23,6 +23,7 @@ class KITDataset(data.Dataset):
         
         self.data_root_path = root_path
         self.data_type = data_type
+        self.setting = setting
         self.record_path = os.path.join(root_path,setting+'.txt')
         with open(self.record_path) as f:
             lines = f.readlines()                            
@@ -157,16 +158,18 @@ class KITDataset(data.Dataset):
             voxel_features.append(voxel)
         voxel_features = np.array(voxel_features)
         return voxel_features, voxel_coord
-                           
+    
+
+    
                                         
     def __getitem__(self, index):
         image_file_path, calib_file_path, lidar_file_path, label_file_path = generate_file_path(index,self.data_root_path)
-        T = read_cal(calib_file_path)['Tr_velo2cam']
+        calib = read_cal(calib_file_path)['Tr_velo2cam']
         lidars = read_velodyne_points(lidar_file_path)
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
-        img = cv2.imread(image_file_path)  
+        image = cv2.imread(image_file_path)  
         gt_box3d = read_label(label_file_path,T)        
-        if self.data_type == 'velodyne_train':
+        if self.setting == 'train':
             # online data augmentation
             lidar, gt_box3d = aug_data(lidar, gt_box3d)
             # specify a range
@@ -175,10 +178,14 @@ class KITDataset(data.Dataset):
             voxel_features, voxel_coords = self.voxelize(vel)
             # bounding-box encoding
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_list[i]
+            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
         
         else:
-            pass
+            lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
+            voxel_features, voxel_coords = self.voxelize(vel)
+            pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
+            
+            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
 
 
     def __len__(self):

@@ -102,7 +102,7 @@ def mytrain():
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
-        for batch_index,contents in enumerate(tqdm(kit_data_loader)):
+        for batch_index, contents in enumerate(tqdm(kit_data_loader)):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
