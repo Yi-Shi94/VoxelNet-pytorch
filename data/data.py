@@ -20,7 +20,6 @@ import yaml
 class KITDataset(data.Dataset):
     def __init__(self, conf_dict, root_path='/home/screentest/dataset/voxelnet',setting='train',data_type='velodyne_train'):
         
-        
         self.data_root_path = root_path
         self.data_type = data_type
         self.setting = setting
@@ -172,19 +171,19 @@ class KITDataset(data.Dataset):
         
         if self.setting=='train':
             # online data augmentation
-            lidar, gt_box3d = aug_data(lidar, gt_box3d)
+            lidars, gt_box3d = aug_data(lidars, gt_box3d)
             # specify a range
-            lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
+            lidars, gt_box3d = utils.get_filtered_lidar(lidars, gt_box3d)
             # voxelize
-            voxel_features, voxel_coords = self.voxelize(vel)
+            voxel_features, voxel_coords = self.voxelize(lidars)
             # bounding-box encoding
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
         
        
         else:
-            lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
-            voxel_features, voxel_coords = self.voxelize(vel)
+            lidars, gt_box3d = utils.get_filtered_lidar(lidars, gt_box3d)
+            voxel_features, voxel_coords = self.voxelize(lidars)
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
