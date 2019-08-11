@@ -23,7 +23,7 @@ class KITDataset(data.Dataset):
         
         self.data_root_path = root_path
         self.data_type = data_type
-        self.record_path = os.path.join(root_path,setting+'.txt)
+        self.record_path = os.path.join(root_path,setting+'.txt')
         with open(self.record_path) as f:
             lines = f.readlines()                            
             self.file_paths = lines.split('\n')
