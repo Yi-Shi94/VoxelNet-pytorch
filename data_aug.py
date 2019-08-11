@@ -14,9 +14,9 @@ voxel_depth = conf_dict['vox_d']
 voxel_width = conf_dict['vox_w']
 voxel_height = conf_dict['vox_h']
 
-H = int((max(range_x)-min(range_x))//vox_height)
-W = int((max(range_y)-min(range_y))//vox_width)
-D = int((max(range_z)-min(range_z))//vox_depth)
+H = int((max(range_x)-min(range_x))//voxel_height)
+W = int((max(range_y)-min(range_y))//voxel_width)
+D = int((max(range_z)-min(range_z))//voxel_depth)
 
 def point_transform(points, tx, ty, tz, rx=0, ry=0, rz=0):
     # Input:
