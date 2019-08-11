@@ -1,28 +1,49 @@
 from __future__ import division
 import numpy as np
-from config import config as cfg
 import math
-import mayavi.mlab as mlab
 import cv2
 from box_overlaps import *
 from data_aug import aug_data
+import yaml
 
+yamlPath = "configure.yaml"
+f = open(yamlPath, 'r', encoding='utf-8')
+conf = f.read()
+conf_dict = yaml.safe_load(conf) 
+
+
+range_x=conf_dict['range_x']
+range_y=conf_dict['range_y']
+range_z=conf_dict['range_z']
+vox_depth = conf_dict['vox_d']
+vox_width = conf_dict['vox_w']
+vox_height = conf_dict['vox_h']
+classes = conf_dict['classes'] 
+pt_thres_per_vox = conf_dict['pt_thres_per_vox'] 
+anchors = conf_dict['anchors']
+anchors_per_vox = conf_dict['anchors_per_vox']
+pos_threshold = conf_dict['pos_threshold']
+neg_threshold = conf_dict['neg_threshold']
+H = (max(range_x)-min(range_x))//vox_height
+W = (max(range_y)-min(range_y))//vox_width
+D = (max(range_z)-min(range_z))//vox_depth
+        
 def get_filtered_lidar(lidar, boxes3d=None):
 
     pxs = lidar[:, 0]
     pys = lidar[:, 1]
     pzs = lidar[:, 2]
 
-    filter_x = np.where((pxs >= cfg.xrange[0]) & (pxs < cfg.xrange[1]))[0]
-    filter_y = np.where((pys >= cfg.yrange[0]) & (pys < cfg.yrange[1]))[0]
-    filter_z = np.where((pzs >= cfg.zrange[0]) & (pzs < cfg.zrange[1]))[0]
+    filter_x = np.where((pxs >= range_x[0]) & (pxs < range_x[1]))[0]
+    filter_y = np.where((pys >= range_y[0]) & (pys < range_y[1]))[0]
+    filter_z = np.where((pzs >= range_z[0]) & (pzs < range_z[1]))[0]
     filter_xy = np.intersect1d(filter_x, filter_y)
     filter_xyz = np.intersect1d(filter_xy, filter_z)
 
     if boxes3d is not None:
-        box_x = (boxes3d[:, :, 0] >= cfg.xrange[0]) & (boxes3d[:, :, 0] < cfg.xrange[1])
-        box_y = (boxes3d[:, :, 1] >= cfg.yrange[0]) & (boxes3d[:, :, 1] < cfg.yrange[1])
-        box_z = (boxes3d[:, :, 2] >= cfg.zrange[0]) & (boxes3d[:, :, 2] < cfg.zrange[1])
+        box_x = (boxes3d[:, :, 0] >= range_x[0]) & (boxes3d[:, :, 0] < range_x[1])
+        box_y = (boxes3d[:, :, 1] >= range_y[0]) & (boxes3d[:, :, 1] < range_y[1])
+        box_z = (boxes3d[:, :, 2] >= range_z[0]) & (boxes3d[:, :, 2] < range_z[1])
         box_xyz = np.sum(box_x & box_y & box_z,axis=1)
 
         return lidar[filter_xyz], boxes3d[box_xyz>0]
@@ -31,9 +52,9 @@ def get_filtered_lidar(lidar, boxes3d=None):
 
 def lidar_to_bev(lidar):
 
-    X0, Xn = 0, cfg.W
-    Y0, Yn = 0, cfg.H
-    Z0, Zn = 0, cfg.D
+    X0, Xn = 0, W
+    Y0, Yn = 0, H
+    Z0, Zn = 0, D
 
     width  = Yn - Y0
     height   = Xn - X0
@@ -44,9 +65,9 @@ def lidar_to_bev(lidar):
     pzs = lidar[:, 2]
     prs = lidar[:, 3]
 
-    qxs=((pxs-cfg.xrange[0])/cfg.vw).astype(np.int32)
-    qys=((pys-cfg.yrange[0])/cfg.vh).astype(np.int32)
-    qzs=((pzs-cfg.zrange[0])/cfg.vd).astype(np.int32)
+    qxs=((pxs-range_x[0])/vox_width).astype(np.int32)
+    qys=((pys-range_y[0])/vox_height).astype(np.int32)
+    qzs=((pzs-range_z[0])/vox_depth).astype(np.int32)
 
     print('height,width,channel=%d,%d,%d'%(height,width,channel))
     top = np.zeros(shape=(height,width,channel), dtype=np.float32)
@@ -55,7 +76,7 @@ def lidar_to_bev(lidar):
     for i in range(len(pxs)):
         top[-qxs[i], -qys[i], -1]= 1+ top[-qxs[i], -qys[i], -1]
         if pzs[i]>mask[-qxs[i], -qys[i],qzs[i]]:
-            top[-qxs[i], -qys[i], qzs[i]] = max(0,pzs[i]-cfg.zrange[0])
+            top[-qxs[i], -qys[i], qzs[i]] = max(0,pzs[i]-range_z[0])
             mask[-qxs[i], -qys[i],qzs[i]]=pzs[i]
         if pzs[i]>mask[-qxs[i], -qys[i],-1]:
             mask[-qxs[i], -qys[i],-1]=pzs[i]
@@ -74,73 +95,6 @@ def lidar_to_bev(lidar):
 
     return top, density_image
 
-
-def draw_lidar(lidar, is_grid=False, is_axis = True, is_top_region=True, fig=None):
-
-    pxs=lidar[:,0]
-    pys=lidar[:,1]
-    pzs=lidar[:,2]
-    prs=lidar[:,3]
-
-    if fig is None: fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
-
-    mlab.points3d(
-        pxs, pys, pzs, prs,
-        mode='point',  # 'point'  'sphere'
-        colormap='gnuplot',  #'bone',  #'spectral',  #'copper',
-        scale_factor=1,
-        figure=fig)
-
-    #draw grid
-    if is_grid:
-        mlab.points3d(0, 0, 0, color=(1,1,1), mode='sphere', scale_factor=0.2)
-
-        for y in np.arange(-50,50,1):
-            x1,y1,z1 = -50, y, 0
-            x2,y2,z2 =  50, y, 0
-            mlab.plot3d([x1, x2], [y1, y2], [z1,z2], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
-
-        for x in np.arange(-50,50,1):
-            x1,y1,z1 = x,-50, 0
-            x2,y2,z2 = x, 50, 0
-            mlab.plot3d([x1, x2], [y1, y2], [z1,z2], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
-
-    #draw axis
-    if is_grid:
-        mlab.points3d(0, 0, 0, color=(1,1,1), mode='sphere', scale_factor=0.2)
-
-        axes=np.array([
-            [2.,0.,0.,0.],
-            [0.,2.,0.,0.],
-            [0.,0.,2.,0.],
-        ],dtype=np.float64)
-        fov=np.array([  ##<todo> : now is 45 deg. use actual setting later ...
-            [20., 20., 0.,0.],
-            [20.,-20., 0.,0.],
-        ],dtype=np.float64)
-
-
-        mlab.plot3d([0, axes[0,0]], [0, axes[0,1]], [0, axes[0,2]], color=(1,0,0), tube_radius=None, figure=fig)
-        mlab.plot3d([0, axes[1,0]], [0, axes[1,1]], [0, axes[1,2]], color=(0,1,0), tube_radius=None, figure=fig)
-        mlab.plot3d([0, axes[2,0]], [0, axes[2,1]], [0, axes[2,2]], color=(0,0,1), tube_radius=None, figure=fig)
-        mlab.plot3d([0, fov[0,0]], [0, fov[0,1]], [0, fov[0,2]], color=(1,1,1), tube_radius=None, line_width=1, figure=fig)
-        mlab.plot3d([0, fov[1,0]], [0, fov[1,1]], [0, fov[1,2]], color=(1,1,1), tube_radius=None, line_width=1, figure=fig)
-
-    #draw top_image feature area
-    if is_top_region:
-        x1 = cfg.xrange[0]
-        x2 = cfg.xrange[1]
-        y1 = cfg.yrange[0]
-        y2 = cfg.yrange[1]
-        mlab.plot3d([x1, x1], [y1, y2], [0,0], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
-        mlab.plot3d([x2, x2], [y1, y2], [0,0], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
-        mlab.plot3d([x1, x2], [y1, y1], [0,0], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
-        mlab.plot3d([x1, x2], [y2, y2], [0,0], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
-
-    mlab.orientation_axes()
-    mlab.view(azimuth=180,elevation=None,distance=50,focalpoint=[ 12.0909996 , -1.04700089, -2.03249991])#2.0909996 , -1.04700089, -2.03249991
-
-    return fig
 
 def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,0,0), line_width=2):
 
@@ -208,8 +162,8 @@ def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, d
     return img
 
 def _quantize_coords(x, y):
-    xx = cfg.H - int((y - cfg.yrange[0]) / cfg.vh)
-    yy = cfg.W - int((x - cfg.xrange[0]) / cfg.vw)
+    xx = H - int((y - range_y[0]) / vox_height)
+    yy = W - int((x - range_x[0]) / vox_width)
     return xx, yy
 
 def  draw_polygons(image, polygons,color=(255,255,255), thickness=1, darken=1):
@@ -378,6 +332,7 @@ def box3d_corner_to_center_batch(box3d_corner):
 
     return np.concatenate([xyz, h, w, l, theta], axis=1).reshape(batch_size, 7)
 
+'''
 def get_anchor3d(anchors):
     num = anchors.shape[0]
     anchors3d = np.zeros((num,8,3))
@@ -386,6 +341,7 @@ def get_anchor3d(anchors):
     anchors3d[:, 4:, :2] = anchors
     anchors3d[:, 4:, 2] = cfg.z_a + cfg.h_a
     return anchors3d
+'''
 
 def load_kitti_label(label_file, Tr):
 
@@ -400,7 +356,7 @@ def load_kitti_label(label_file, Tr):
         obj = lines[j].strip().split(' ')
 
         obj_class = obj[0].strip()
-        if obj_class not in cfg.class_list:
+        if obj_class not in classes:
             continue
 
         box3d_corner = box3d_cam_to_velo(obj[8:], Tr)
@@ -412,62 +368,4 @@ def load_kitti_label(label_file, Tr):
     return gt_boxes3d_corner
 
 
-def test():
-    import os
-    import glob
-    import matplotlib.pyplot as plt
-
-    lidar_path = os.path.join('./data/KITTI/training', "crop/")
-    image_path = os.path.join('./data/KITTI/training', "image_2/")
-    calib_path = os.path.join('./data/KITTI/training', "calib/")
-    label_path = os.path.join('./data/KITTI/training', "label_2/")
-
-
-    file=[i.strip().split('/')[-1][:-4] for i in sorted(os.listdir(label_path))]
-
-    i=2600
-
-    lidar_file = lidar_path + '/' + file[i] + '.bin'
-    calib_file = calib_path + '/' + file[i] + '.txt'
-    label_file = label_path + '/' + file[i] + '.txt'
-    image_file = image_path + '/' + file[i] + '.png'
-
-    image = cv2.imread(image_file)
-    print("Processing: ", lidar_file)
-    lidar = np.fromfile(lidar_file, dtype=np.float32)
-    lidar = lidar.reshape((-1, 4))
-
-    calib = load_kitti_calib(calib_file)
-    gt_box3d = load_kitti_label(label_file, calib['Tr_velo2cam'])
-
-    # augmentation
-    #lidar, gt_box3d = aug_data(lidar, gt_box3d)
-
-    # filtering
-    lidar, gt_box3d = get_filtered_lidar(lidar, gt_box3d)
-
-    # view in point cloud
-
-    # fig = draw_lidar(lidar, is_grid=False, is_top_region=True)
-    # draw_gt_boxes3d(gt_boxes3d=gt_box3d, fig=fig)
-    # mlab.show()
-
-    # view in image
-
-    # gt_3dTo2D = project_velo2rgb(gt_box3d, calib)
-    # img_with_box = draw_rgb_projections(image,gt_3dTo2D, color=(0,0,255),thickness=1)
-    # plt.imshow(img_with_box[:,:,[2,1,0]])
-    # plt.show()
-
-    # view in bird-eye view
-
-    top_new, density_image=lidar_to_bev(lidar)
-    # gt_box3d_top = corner_to_standup_box2d_batch(gt_box3d)
-    # density_with_box = draw_rects(density_image,gt_box3d_top)
-    density_with_box = draw_polygons(density_image,gt_box3d[:,:4,:2])
-    plt.imshow(density_with_box,cmap='gray')
-    plt.show()
-
-if __name__ == '__main__':
-    test()
 

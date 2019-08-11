@@ -63,12 +63,11 @@ def read_label(file_path):
         bbox_3d = coords_3d[coords_keep_indices,:]
         return bbox_2d,bbox_3d
 
-def generate_file_path(file_index):
-    parent_pth = "./data/dataset/voxel_mini_data"
+def generate_file_path(file_index,mode="training):
+    parent_pth = "~/dataset/voxelnet/"
     file_name = "%06d"%(file_index)
-    print(parent_pth)
-    img = os.path.join(parent_pth,'data_object_image_2','training','image_2',file_name+'.png')
-    vel = os.path.join(parent_pth,'data_object_velodyne','training','velodyne',file_name+'.bin')
-    cal = os.path.join(parent_pth,'data_object_calib','training','calib',file_name+'.txt')
-    label = os.path.join(parent_pth,'data_object_label_2','training','label_2',file_name+'.txt')
+    img = os.path.join(parent_pth,mode,'image_2',  file_name+'.png')
+    vel = os.path.join(parent_pth,mode,'velodyne', file_name+'.bin')
+    cal = os.path.join(parent_pth,mode,'calib',    file_name+'.txt')
+    label = os.path.join(parent_pth,mode,'label_2',file_name+'.txt')
     return [img,vel,cal,label]

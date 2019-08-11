@@ -30,8 +30,16 @@ yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+if conf_dict['cuda']==1:
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    
+def weights_init(m):
+    if isinstance(m, nn.Conv2d):
+        init.xavier_uniform(m.weight.data)
+        m.bias.data.zero_()
+        
+            
 def detection_collate(batch):
     voxel_features = []
     voxel_coords = []
@@ -62,16 +70,18 @@ def detection_collate(batch):
            np.array(targets),\
            images, calibs, ids
 
-
-
+if_continued = True if conf_dict['if_continued'] == "1" else False
+if_cuda = True if conf_dict["if_cuda"] == "1" else False
 batch_size = conf_dict['batch_size']
-cuda = True if conf_dict["cuda"] == "1" else False
 learning_rate = eval(conf_dict["lr"])
 a = eval(conf_dict["alpha"])
 b = eval(conf_dict["beta"])
 epoch_num = eval(conf_dict["epoch"])
+chk_pth = conf_dict["chk_pth"]
+print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_alpha:{}, loss_beta:{}," \
+      .format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, loss_alpha, loss_beta))
 
-
+print("----------------------------------------\n")
 kit_dataset= KITDataset(conf_dict=conf_dict)
 data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
                               collate_fn=detection_collate, shuffle=True, \
@@ -79,19 +89,23 @@ data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4,
 
 # network
 net = VoxelNet()
-if cuda:
+if if_cuda:
     net.cuda()
-
+    
 def train():
-    def weights_init(m):
-        if isinstance(m, nn.Conv2d):
-            init.xavier_uniform(m.weight.data)
-            m.bias.data.zero_()
-            
+    log_file = open('./log.txt','w')
     net.train()
-    # initialization
-    print('Initializing weights...')
-    net.apply(weights_init)
+   
+    if if_continued:
+        print('Loading pre-trained weights...')
+        chk = glob(chk_pth+'/*')[-1]
+        net.load_state_dict(torch.load(chk))
+        net.eval()
+    else:       
+        # initialization
+        print('Initializing weights...')
+        net.apply(weights_init)
+    
     optimizer = optim.SGD(net.parameters(), lr=0.01)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
@@ -101,7 +115,6 @@ def train():
         scheduler.step()
         for batch_index,contents in enumerate(data_loader):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
-
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
             pos_equal_one = Variable(torch.cuda.FloatTensor(pos_equal_one))
@@ -112,21 +125,21 @@ def train():
             optimizer.zero_grad()
             # forward
             t0 = time.time()
-            psm,rm = net(voxel_features, voxel_coords)
+            psm, rm = net(voxel_features, voxel_coords)
             # calculate loss
             conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
             loss = conf_loss + reg_loss
             loss.backward()
             optimizer.step()
-
+            if epoch % 4 ==0:
+                 torch.save(model.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
+            if batch_per_epoch:
             print('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.' % (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
-            print('iter ' + repr(iteration) + ' || Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f' % \
-                  (loss.data[0], conf_loss.data[0], reg_loss.data[0]))
-
+            res = 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f' % \
+                  (loss.data[0], conf_loss.data[0], reg_loss.data[0])
+            print(res)
+            log_file.write(res)
+    
 if __name__ == '__main__':
     train()
       
-        
-
-
-

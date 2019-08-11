@@ -16,12 +16,13 @@ import torch
 import cv2
 import yaml
 
+
 class KITDataset(data.Dataset):
-    def __init__(self, conf_dict, root_path='./data/dataset/',setting='train',data_type='velodyne_train'):
+    def __init__(self, conf_dict, root_path='~/dataset/voxelnet',setting='train',data_type='velodyne_train'):
         
         self.data_root_path = root_path
         self.data_type = data_type
-        self.record_path = os.path.join('./data',setting+'.txt)
+        self.record_path = os.path.join(root_path,setting+'.txt)
         with open(self.record_path) as f:
             lines = f.readlines()                            
             self.file_paths = lines.split('\n')
@@ -48,7 +49,6 @@ class KITDataset(data.Dataset):
         x = np.linspace(range_x[0]+self.vox_width, range_x[1]-self.vox_width, self.W/2)
         y = np.linspace(range_y[0]+self.vox_height, range_x[1]-self.vox_height, self.H/2)
         cx, cy = np.meshgrid(self.x, self.y)
-    # all is (w, l, 2)
         cx = np.tile(cx[..., np.newaxis], 2)
         cy = np.tile(cy[..., np.newaxis], 2)
         cz = np.ones_like(cx) * (-1.0)
@@ -159,12 +159,12 @@ class KITDataset(data.Dataset):
                            
                                         
     def __getitem__(self, index):
-        image_file_path,calib_file_path,lidar_file_path,label_file_path = generate_file_path(index)
+        image_file_path, calib_file_path, lidar_file_path, label_file_path = generate_file_path(index)
         T = read_cal(calib_file)['Tr_velo2cam']
         lidars = read_velodyne_points(lidar_file_path)
-        lidars,_ = prepare_velodyne_points(lidars,range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
+        lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         img = cv2.imread(image_file_path)  
-        bbox3d = read_label(label_file_path,T)        
+        gt_box3d = read_label(label_file_path,T)        
         if self.type == 'train':
             # online data augmentation
             lidar, gt_box3d = aug_data(lidar, gt_box3d)

@@ -1,10 +1,11 @@
-cuda: 1
+if_cuda: 1
 batch_size: 16
+if_continue: 0
 lr: 0.01
 alpha: 0.5
 beta: 1
 epoch: 30
-
+chk_pth: "./checkpoints"
 range_x:
     - 0
     - 70
@@ -20,6 +21,7 @@ range_z:
 vox_d: 0.4
 vox_w: 0.2
 vox_h: 0.2
+
 anchors_per_vox = 2
 nms_threshold = 0.1
 score_threshold = 0.8
@@ -28,6 +30,6 @@ iou_neg_threshold = 0.45
 pt_thres_per_vox: 40
 
 classes:
-    #- "Car"
+    - "Car"
     - "Cyclist"
-    - "Pedestrian"
+    #- "Pedestrian"
