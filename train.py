@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import with_statement
 from __future__ import absolute_import
 
+import time
 import os
 import sys
 import yaml
@@ -25,7 +26,7 @@ import torch.utils.data as data
 import torch.backends.cudnn
 import torch.optim as optim
 import torch.nn.init as init
-from torch.autograd import Variable
+
 
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
