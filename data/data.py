@@ -109,7 +109,7 @@ class KITDataset(data.Dataset):
         id_neg.sort()
         # cal the target and set the equal one
         index_x, index_y, index_z = np.unravel_index(
-            id_pos, (*self.feature_map_shape, self.anchors_per_position))
+            id_pos, (*self.feature_map_shape, self.anchors_per_vox))
         pos_equal_one[index_x, index_y, index_z] = 1
         # ATTENTION: index_z should be np.array
 
@@ -128,11 +128,11 @@ class KITDataset(data.Dataset):
         targets[index_x, index_y, np.array(index_z) * 7 + 6] = (
                 gt_xyzhwlr[id_pos_gt, 6] - self.anchors[id_pos, 6])
         index_x, index_y, index_z = np.unravel_index(
-            id_neg, (*self.feature_map_shape, self.anchors_per_position))
+            id_neg, (*self.feature_map_shape, self.anchors_per_vox))
         neg_equal_one[index_x, index_y, index_z] = 1
         # to avoid a box be pos/neg in the same time
         index_x, index_y, index_z = np.unravel_index(
-            id_highest, (*self.feature_map_shape, self.anchors_per_position))
+            id_highest, (*self.feature_map_shape, self.anchors_per_vox))
         neg_equal_one[index_x, index_y, index_z] = 0
         return pos_equal_one, neg_equal_one, targets
 
