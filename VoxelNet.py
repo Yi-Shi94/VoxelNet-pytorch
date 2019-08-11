@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 from torch.autograd import Variable
-from config import config as cfg
+
 
 # conv2d + bn + relu
 class Conv2d(nn.Module):
