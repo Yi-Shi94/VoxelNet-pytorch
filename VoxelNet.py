@@ -2,7 +2,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 from torch.autograd import Variable
-
+import yaml
+yamlPath = "configure.yaml"
+f = open(yamlPath, 'r', encoding='utf-8')
+conf = f.read()
+conf_dict = yaml.safe_load(conf) 
 
 # conv2d + bn + relu
 class Conv2d(nn.Module):
@@ -67,7 +71,7 @@ class VFE(nn.Module):
         # point-wise feauture
         pwf = self.fcn(x)
         #locally aggregated feature
-        laf = torch.max(pwf,1)[0].unsqueeze(1).repeat(1,cfg.T,1)
+        laf = torch.max(pwf,1)[0].unsqueeze(1).repeat(1,conf_dict['pt_thres_per_vox'],1)
         # point-wise concat feature
         pwcf = torch.cat((pwf,laf),dim=2)
         # apply mask
@@ -127,8 +131,8 @@ class RPN(nn.Module):
         self.deconv_2 = nn.Sequential(nn.ConvTranspose2d(128, 256, 2, 2, 0),nn.BatchNorm2d(256))
         self.deconv_3 = nn.Sequential(nn.ConvTranspose2d(128, 256, 1, 1, 0),nn.BatchNorm2d(256))
 
-        self.score_head = Conv2d(768, cfg.anchors_per_position, 1, 1, 0, activation=False, batch_norm=False)
-        self.reg_head = Conv2d(768, 7 * cfg.anchors_per_position, 1, 1, 0, activation=False, batch_norm=False)
+        self.score_head = Conv2d(768, conf_dict['anchors_per_vox'], 1, 1, 0, activation=False, batch_norm=False)
+        self.reg_head = Conv2d(768, 7 * conf_dict['anchors_per_vox'], 1, 1, 0, activation=False, batch_norm=False)
 
     def forward(self,x):
         x = self.block_1(x)
@@ -151,7 +155,7 @@ class VoxelNet(nn.Module):
         
     def voxel_indexing(self, sparse_features, coords):
         dim = sparse_features.shape[-1]
-        dense_feature = Variable(torch.zeros(dim, cfg.N, cfg.D, cfg.H, cfg.W).cuda())
+        dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], conf_dict['voxel_depth'], conf_dict['voxel_height'], conf_dict['voxel_width']).cuda())
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features
         return dense_feature.transpose(0, 1)
 
@@ -163,5 +167,5 @@ class VoxelNet(nn.Module):
         cml_out = self.cml(vwfs)
         # region proposal network
         # merge the depth and feature dim into one, output probability score map and regression map
-        psm,rm = self.rpn(cml_out.view(cfg.N,-1,cfg.H, cfg.W))
+        psm,rm = self.rpn(cml_out.view(conf_dict['batch_size'],-1,conf_dict['voxel_height'], conf_dict['voxel_width']))
         return psm, rm

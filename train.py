@@ -73,7 +73,7 @@ b = conf_dict["beta"]
 epoch_num = conf_dict["epoch"]
 chk_pth = conf_dict["chk_pth"]
 print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_param_alpha:{}, loss_param_beta:{},".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, a, b))
-
+print(type(chk_pth),type(epoch_num))
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 print("----------------------------------------\n")
