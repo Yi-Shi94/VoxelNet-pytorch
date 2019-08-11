@@ -94,9 +94,9 @@ class SVFE(nn.Module):
         return x
 
 # Convolutional Middle Layer
-class CML(nn.Module):
+class ConvoMidLayer(nn.Module):
     def __init__(self):
-        super(CML, self).__init__()
+        super(ConvoMidLayer, self).__init__()
         self.conv3d_1 = Conv3d(128, 64, 3, s=(2, 1, 1), p=(1, 1, 1))
         self.conv3d_2 = Conv3d(64, 64, 3, s=(1, 1, 1), p=(0, 1, 1))
         self.conv3d_3 = Conv3d(64, 64, 3, s=(2, 1, 1), p=(1, 1, 1))
@@ -142,15 +142,12 @@ class RPN(nn.Module):
         x = torch.cat((x_0,x_1,x_2),1)
         return self.score_head(x),self.reg_head(x)
 
-
 class VoxelNet(nn.Module):
-
     def __init__(self):
         super(VoxelNet, self).__init__()
         self.svfe = SVFE()
-        self.cml = CML()
+        self.cml = ConvoMidLayer()
         self.rpn = RPN()
-        
         
     def voxel_indexing(self, sparse_features, coords):
         dim = sparse_features.shape[-1]
@@ -159,7 +156,6 @@ class VoxelNet(nn.Module):
         return dense_feature.transpose(0, 1)
 
     def forward(self, voxel_features, voxel_coords):
-
         # feature learning network
         vwfs = self.svfe(voxel_features)
         vwfs = self.voxel_indexing(vwfs,voxel_coords)

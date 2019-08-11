@@ -6,9 +6,9 @@ from __future__ import absolute_import
 import os
 import sys
 from utils.file_load import *
-#from utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
-#from box_overlaps import bbox_overlaps
-#from data_aug import aug_data
+from utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
+from box_overlaps import bbox_overlaps
+from data_aug import aug_data
 
 import torch.utils.data as data
 import numpy as np
@@ -17,7 +17,7 @@ import cv2
 import yaml
 
 class KITDataset(data.Dataset):
-    def __init__(self, conf_dict, root_path='./data/dataset/voxel_mini_data',setting='train',data_type='velodyne_train'):
+    def __init__(self, conf_dict, root_path='./data/dataset/',setting='train',data_type='velodyne_train'):
         
         self.data_root_path = root_path
         self.data_type = data_type
@@ -25,9 +25,7 @@ class KITDataset(data.Dataset):
         with open(self.record_path) as f:
             lines = f.readlines()                            
             self.file_paths = lines.split('\n')
-             
                           
-                                  
         self.range_x=conf_dict['range_x']
         self.range_y=conf_dict['range_y']
         self.range_z=conf_dict['range_z']
@@ -46,9 +44,23 @@ class KITDataset(data.Dataset):
         self.D = (max(self.range_z)-min(self.range_z))//self.vox_depth
         self.anchors = self.anchors.reshape(-1,7)
         self.feature_map_shape = (int(self.H / 2), int(self.W / 2))
-
-                        
-
+                                        
+        x = np.linspace(range_x[0]+self.vox_width, range_x[1]-self.vox_width, self.W/2)
+        y = np.linspace(range_y[0]+self.vox_height, range_x[1]-self.vox_height, self.H/2)
+        cx, cy = np.meshgrid(self.x, self.y)
+    # all is (w, l, 2)
+        cx = np.tile(cx[..., np.newaxis], 2)
+        cy = np.tile(cy[..., np.newaxis], 2)
+        cz = np.ones_like(cx) * (-1.0)
+        w = np.ones_like(cx) * 1.6
+        l = np.ones_like(cx) * 3.9
+        h = np.ones_like(cx) * 1.56
+        r = np.ones_like(cx)
+        r[..., 0] = 0
+        r[..., 1] = np.pi/2
+        self.anchors = np.stack([cx, cy, cz, h, w, l, r], axis=-1)
+                                
+                                        
     def cal_target(self, gt_box3d):
         # Input:
         #   labels: (N,)
@@ -121,12 +133,11 @@ class KITDataset(data.Dataset):
         index_x, index_y, index_z = np.unravel_index(
             id_highest, (*self.feature_map_shape, self.anchors_per_position))
         neg_equal_one[index_x, index_y, index_z] = 0
-
         return pos_equal_one, neg_equal_one, targets
 
     def voxelize(self, lidar): #preprocessing
-        voxel_coords = ((lidar[:, :3] - np.array([self.xrange[0], self.yrange[0], self.zrange[0]])) / (
-                        self.vw, self.vh, self.vd)).astype(np.int32)
+        voxel_coords = ((lidar[:, :3] - np.array([self.range_X[0], self.range_y[0], self.range_z[0]])) / (
+                        self.vox_width, self.vox_height, self.vox_depth)).astype(np.int32)
         # convert to  (D, H, W)
         voxel_coords = voxel_coords[:,[2,1,0]]                    
         # unique voxel coordinates, index in original array of each element in unique array
@@ -144,13 +155,8 @@ class KITDataset(data.Dataset):
             voxel[:pts.shape[0], :] = np.concatenate((pts, pts[:, :3] - np.mean(pts[:, :3], 0)), axis=1)
             voxel_features.append(voxel)
         voxel_features = np.array(voxel_features)
-        return voxel_features, voxel_coords
-    def aug(lidar, gt_box3d):
-        mode = random.randint(0,5)
-        #flip
-        #if mode == 0:
-                                           
-        
+        return voxel_features, voxel_coord
+                           
                                         
     def __getitem__(self, index):
         image_file_path,calib_file_path,lidar_file_path,label_file_path = generate_file_path(index)
@@ -161,7 +167,7 @@ class KITDataset(data.Dataset):
         bbox3d = read_label(label_file_path,T)        
         if self.type == 'train':
             # online data augmentation
-            # lidar, gt_box3d = aug_data(lidar, gt_box3d)
+            lidar, gt_box3d = aug_data(lidar, gt_box3d)
             # specify a range
             lidar, gt_box3d = utils.get_filtered_lidar(lidar, gt_box3d)
             # voxelize

@@ -11,9 +11,9 @@ from glob import glob
 import matplotlib.pyplot as plt
 import cv2
 
-#from utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
-#from box_overlaps import bbox_overlaps
-#from data_aug import aug_data
+from utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
+from box_overlaps import bbox_overlaps
+from data_aug import aug_data
 
 from utils.coord_transform import *
 from utils.file_load import *
@@ -30,7 +30,6 @@ yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def detection_collate(batch):
@@ -45,7 +44,6 @@ def detection_collate(batch):
     
     for i, sample in enumerate(batch):
         voxel_features.append(sample[0])
-
         voxel_coords.append(
             np.pad(sample[1], ((0, 0), (1, 0)),
                 mode='constant', constant_values=i))
@@ -68,10 +66,10 @@ def detection_collate(batch):
 
 batch_size = conf_dict['batch_size']
 cuda = True if conf_dict["cuda"] == "1" else False
-leaning_rate = eval(conf_dict["lr"])
+learning_rate = eval(conf_dict["lr"])
 a = eval(conf_dict["alpha"])
 b = eval(conf_dict["beta"])
-epoch = eval(conf_dict["epoch"])
+epoch_num = eval(conf_dict["epoch"])
 
 
 kit_dataset= KITDataset(conf_dict=conf_dict)
@@ -94,22 +92,15 @@ def train():
     # initialization
     print('Initializing weights...')
     net.apply(weights_init)
-    # define optimizer
-    optimizer = optim.SGD(net.parameters(), lr=0.001)
-    # define loss function
+    optimizer = optim.SGD(net.parameters(), lr=0.01)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
+    batch_per_epoch = len(data_loader)//batch_size
     # training process
-    batch_iterator = None
-    epoch_size = len(dataset) // batch_size
-    
-    
-    print('Epoch size', epoch_size)
-    for iteration in range(10000):
-            if (not batch_iterator) or (iteration % epoch_size == 0):
-                # create batch iterator
-                batch_iterator = iter(data_loader)
-
-            voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = next(batch_iterator)
+    for epoch in range(epoch_num):
+        scheduler.step()
+        for batch_index,contents in enumerate(data_loader):
+            voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
 
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
@@ -119,31 +110,18 @@ def train():
 
             # zero the parameter gradients
             optimizer.zero_grad()
-
             # forward
             t0 = time.time()
             psm,rm = net(voxel_features, voxel_coords)
-
             # calculate loss
             conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
             loss = conf_loss + reg_loss
-
-            # backward
             loss.backward()
             optimizer.step()
 
-            t1 = time.time()
-
-
-            print('Timer: %.4f sec.' % (t1 - t0))
+            print('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.' % (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
             print('iter ' + repr(iteration) + ' || Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f' % \
                   (loss.data[0], conf_loss.data[0], reg_loss.data[0]))
-
-            # visualization
-            #draw_boxes(rm, psm, ids, images, calibs, 'pred')
-            draw_boxes(targets.data, pos_equal_one.data, images, calibs, ids,'true')
-
-
 
 if __name__ == '__main__':
     train()

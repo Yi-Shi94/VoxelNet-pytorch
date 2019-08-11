@@ -54,7 +54,6 @@ def read_cal(file_path):
 def read_label(file_path):
     with open(file_path,mode='r') as f:
         lines = f.readlines()
-        
         lines = np.array(list(map(lambda x:x.split(),lines)))
         #print (bbox_2d)
         coords_2d = np.concatenate([lines[:,:1],lines[:,4:8],lines[:,-1:]],1)

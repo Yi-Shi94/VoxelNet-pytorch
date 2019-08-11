@@ -27,17 +27,18 @@ def box3d_cam_to_velo(box3d, Tr):
     cam[2] = z
     t_lidar = project_cam2velo(cam, Tr)
     
-    Box = np.array([[-l / 2, -l / 2, l / 2, l / 2, -l / 2, -l / 2, l / 2, l / 2],
-                    [w / 2, -w / 2, -w / 2, w / 2, w / 2, -w / 2, -w / 2, w / 2],
+    #in origin parallel to xy
+    Box = np.array([[-l/2, -l/2, l/2, l/2, -l/2, -l/2, l/2, l/2],
+                    [w/2, -w/2, -w/2, w/2, w/2, -w/2, -w/2, w/2],
                     [0, 0, 0, 0, h, h, h, h]])
 
     rz = ry_to_rz(ry)
-
+    # rotate matrix along z axis
     rotMat = np.array([
         [np.cos(rz), -np.sin(rz), 0.0],
         [np.sin(rz), np.cos(rz), 0.0],
         [0.0, 0.0, 1.0]])
-
+    # perform rotation
     velo_box = np.dot(rotMat, Box)
     cornerPosInVelo = velo_box + np.tile(t_lidar, (8, 1)).T
     box3d_corner = cornerPosInVelo.transpose()
