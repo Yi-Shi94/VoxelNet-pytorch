@@ -30,9 +30,6 @@ yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
-
-if conf_dict['if_cuda']==1:
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
@@ -70,13 +67,15 @@ def detection_collate(batch):
 if_continued = True if conf_dict['if_continued'] == "1" else False
 if_cuda = True if conf_dict["if_cuda"] == "1" else False
 batch_size = conf_dict['batch_size']
-learning_rate = eval(conf_dict["lr"])
-a = eval(conf_dict["alpha"])
-b = eval(conf_dict["beta"])
-epoch_num = eval(conf_dict["epoch"])
+learning_rate = conf_dict["lr"]
+a = conf_dict["alpha"]
+b = conf_dict["beta"]
+epoch_num = conf_dict["epoch"]
 chk_pth = conf_dict["chk_pth"]
 print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_alpha:{}, loss_beta:{},".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, loss_alpha, loss_beta))
 
+if if_cuda:
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 print("----------------------------------------\n")
 kit_dataset= KITDataset(conf_dict=conf_dict)
 data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
