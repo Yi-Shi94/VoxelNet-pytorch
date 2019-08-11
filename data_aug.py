@@ -1,5 +1,23 @@
+from __future__ import division
 import numpy as np
 import cv2
+import yaml
+
+yamlPath = "configure.yaml"
+f = open(yamlPath, 'r', encoding='utf-8')
+conf = f.read()
+conf_dict = yaml.safe_load(conf) 
+
+range_x=conf_dict['range_x']
+range_y=conf_dict['range_y']
+range_z=conf_dict['range_z']
+vox_depth = conf_dict['vox_d']
+vox_width = conf_dict['vox_w']
+vox_height = conf_dict['vox_h']
+
+H = (max(range_x)-min(range_x))//vox_height
+W = (max(range_y)-min(range_y))//vox_width
+D = (max(range_z)-min(range_z))//vox_depth
 
 def point_transform(points, tx, ty, tz, rx=0, ry=0, rz=0):
     # Input:
@@ -50,11 +68,11 @@ def box_transform(boxes_corner, tx, ty, tz, r=0):
 def cal_iou2d(box1_corner, box2_corner):
     box1_corner = np.reshape(box1_corner, [4, 2])
     box2_corner = np.reshape(box2_corner, [4, 2])
-    box1_corner = ((cfg.W, cfg.H)-(box1_corner - (cfg.xrange[0], cfg.yrange[0])) / (cfg.vw, cfg.vh)).astype(np.int32)
-    box2_corner = ((cfg.W, cfg.H)-(box2_corner - (cfg.xrange[0], cfg.yrange[0])) / (cfg.vw, cfg.vh)).astype(np.int32)
+    box1_corner = ((W, H)-(box1_corner - (range_x[0], range_y[0])) / (voxel_width, voxel_height)).astype(np.int32)
+    box2_corner = ((W, H)-(box2_corner - (range_x[0], range_y[0])) / (voxel_width, voxel_height)).astype(np.int32)
 
-    buf1 = np.zeros((cfg.H, cfg.W, 3))
-    buf2 = np.zeros((cfg.H, cfg.W, 3))
+    buf1 = np.zeros((H, W, 3))
+    buf2 = np.zeros((H, W, 3))
     buf1 = cv2.fillConvexPoly(buf1, box1_corner, color=(1,1,1))[..., 0]
     buf2 = cv2.fillConvexPoly(buf2, box2_corner, color=(1,1,1))[..., 0]
 
