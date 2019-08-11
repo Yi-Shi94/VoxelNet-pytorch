@@ -18,7 +18,7 @@ from box_overlaps import bbox_overlaps
 from data_aug import aug_data
 
 from VoxelNet import VoxelNet
-from VocelLoss import VoxelLoss
+from VoxelLoss import VoxelLoss
 
 import torch
 import torch.utils.data as data
