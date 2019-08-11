@@ -59,8 +59,8 @@ def detection_collate(batch):
            np.array(pos_equal_one),np.array(neg_equal_one),\
            np.array(targets), images, calibs, ids
 
-if_continued = True if conf_dict['if_continued'] == "1" else False
-if_cuda = True if conf_dict["if_cuda"] == "1" else False
+if_continued = True if conf_dict['if_continued'] == 1 else False
+if_cuda = True if conf_dict["if_cuda"] == 1 else False
 batch_size = conf_dict['batch_size']
 learning_rate = conf_dict["lr"]
 a = conf_dict["alpha"]
