@@ -156,7 +156,7 @@ class KITDataset(data.Dataset):
             voxel[:pts.shape[0], :] = np.concatenate((pts, pts[:, :3] - np.mean(pts[:, :3], 0)), axis=1)
             voxel_features.append(voxel)
         voxel_features = np.array(voxel_features)
-        return voxel_features, voxel_coord
+        return voxel_features, voxel_coords
     
 
     
