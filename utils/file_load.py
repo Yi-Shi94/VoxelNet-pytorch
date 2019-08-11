@@ -50,9 +50,10 @@ def read_cal(file_path):
         R_cam_to_rect[:3,:3] = np.array(items[4][1]).reshape(3,3).astype('float32')
         info_dict['R_cam_to_rect'] = R_cam_to_rect
         info_dict['Tr_velo_to_cam'] = Tr_velo_to_cam
+        
         return info_dict
     
-def read_label(file_path):
+def read_label_for_vis(file_path):
     with open(file_path,mode='r') as f:
         lines = f.readlines()
         lines = np.array(list(map(lambda x:x.split(),lines)))
@@ -64,6 +65,24 @@ def read_label(file_path):
         bbox_3d = coords_3d[coords_keep_indices,:]
         return bbox_2d,bbox_3d
 
+def read_label(file_path,Tr,classes):
+    with open(file_path,'r') as f:
+        lines = f.readlines()
+        gt_boxes3d_corner = []
+
+        num_obj = len(lines)
+
+        for j in range(num_obj):
+            obj = lines[j].strip().split(' ')
+            obj_class = obj[0].strip()
+            if obj_class not in classes:
+                continue
+            box3d_corner = box3d_cam_to_velo(obj[8:], Tr)
+
+        gt_boxes3d_corner.append(box3d_corner)
+        gt_boxes3d_corner = np.array(gt_boxes3d_corner).reshape(-1,8,3)
+        return gt_boxes3d_corner
+    
 def generate_file_path(file_index,root_path,mode="training"):
     parent_pth = root_path
     file_name = "%06d"%(file_index)

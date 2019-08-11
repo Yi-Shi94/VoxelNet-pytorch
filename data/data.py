@@ -168,7 +168,7 @@ class KITDataset(data.Dataset):
         lidars = read_velodyne_points(lidar_file_path)
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         image = cv2.imread(image_file_path)  
-        gt_box3d = read_label(label_file_path,calib)        
+        gt_box3d = read_label(label_file_path,calib,self.classes)        
         
         if self.setting=='train':
             # online data augmentation
