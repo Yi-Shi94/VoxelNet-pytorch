@@ -10,8 +10,6 @@ yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
-
-
 range_x=conf_dict['range_x']
 range_y=conf_dict['range_y']
 range_z=conf_dict['range_z']
@@ -20,13 +18,27 @@ vox_width = conf_dict['vox_w']
 vox_height = conf_dict['vox_h']
 classes = conf_dict['classes'] 
 pt_thres_per_vox = conf_dict['pt_thres_per_vox'] 
-anchors = conf_dict['anchors']
 anchors_per_vox = conf_dict['anchors_per_vox']
 pos_threshold = conf_dict['pos_threshold']
 neg_threshold = conf_dict['neg_threshold']
 H = (max(range_x)-min(range_x))//vox_height
 W = (max(range_y)-min(range_y))//vox_width
 D = (max(range_z)-min(range_z))//vox_depth
+feature_map_shape = (int(H / 2), int(W / 2))
+x = np.linspace(range_x[0]+vox_width, range_x[1]-vox_width, W/2)
+y = np.linspace(range_y[0]+vox_height, range_x[1]-vox_height, H/2)
+cx, cy = np.meshgrid(x, y)
+cx = np.tile(cx[..., np.newaxis], 2)
+cy = np.tile(cy[..., np.newaxis], 2)
+cz = np.ones_like(cx) * (-1.0)
+w = np.ones_like(cx) * 1.6
+l = np.ones_like(cx) * 3.9
+h = np.ones_like(cx) * 1.56
+r = np.ones_like(cx)
+r[..., 0] = 0
+r[..., 1] = np.pi/2
+anchors = np.stack([cx, cy, cz, h, w, l, r], axis=-1)
+anchors = anchors.reshape(-1,7)
         
 def get_filtered_lidar(lidar, boxes3d=None):
 
@@ -134,83 +146,10 @@ def project_velo2rgb(velo,calib):
         projections[i] = box2d
     return projections
 
-def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, darker=1):
-
-    img = image.copy()*darker
-    num=len(projections)
-    forward_color=(255,255,0)
-    for n in range(num):
-        qs = projections[n]
-        for k in range(0,4):
-            i,j=k,(k+1)%4
-
-            cv2.line(img, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
-
-            i,j=k+4,(k+1)%4 + 4
-            cv2.line(img, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
-
-            i,j=k,k+4
-            cv2.line(img, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
-
-        cv2.line(img, (qs[3,0],qs[3,1]), (qs[7,0],qs[7,1]), forward_color, thickness, cv2.LINE_AA)
-        cv2.line(img, (qs[7,0],qs[7,1]), (qs[6,0],qs[6,1]), forward_color, thickness, cv2.LINE_AA)
-        cv2.line(img, (qs[6,0],qs[6,1]), (qs[2,0],qs[2,1]), forward_color, thickness, cv2.LINE_AA)
-        cv2.line(img, (qs[2,0],qs[2,1]), (qs[3,0],qs[3,1]), forward_color, thickness, cv2.LINE_AA)
-        cv2.line(img, (qs[3,0],qs[3,1]), (qs[6,0],qs[6,1]), forward_color, thickness, cv2.LINE_AA)
-        cv2.line(img, (qs[2,0],qs[2,1]), (qs[7,0],qs[7,1]), forward_color, thickness, cv2.LINE_AA)
-
-    return img
-
 def _quantize_coords(x, y):
     xx = H - int((y - range_y[0]) / vox_height)
     yy = W - int((x - range_x[0]) / vox_width)
     return xx, yy
-
-def  draw_polygons(image, polygons,color=(255,255,255), thickness=1, darken=1):
-
-    img = image.copy() * darken
-    for polygon in polygons:
-        tup0, tup1, tup2, tup3 = [_quantize_coords(*tup) for tup in polygon]
-        cv2.line(img, tup0, tup1, color, thickness, cv2.LINE_AA)
-        cv2.line(img, tup1, tup2, color, thickness, cv2.LINE_AA)
-        cv2.line(img, tup2, tup3, color, thickness, cv2.LINE_AA)
-        cv2.line(img, tup3, tup0, color, thickness, cv2.LINE_AA)
-    return img
-
-def draw_rects(image, rects, color=(255,255,255), thickness=1, darken=1):
-
-    img = image.copy() * darken
-    for rect in rects:
-        tup0,tup1 = [_quantize_coords(*tup) for tup in list(zip(rect[0::2], rect[1::2]))]
-        cv2.rectangle(img, tup0, tup1, color, thickness, cv2.LINE_AA)
-    return img
-
-def load_kitti_calib(calib_file):
-    """
-    load projection matrix
-    """
-    with open(calib_file) as fi:
-        lines = fi.readlines()
-        assert (len(lines) == 8)
-
-    obj = lines[0].strip().split(' ')[1:]
-    P0 = np.array(obj, dtype=np.float32)
-    obj = lines[1].strip().split(' ')[1:]
-    P1 = np.array(obj, dtype=np.float32)
-    obj = lines[2].strip().split(' ')[1:]
-    P2 = np.array(obj, dtype=np.float32)
-    obj = lines[3].strip().split(' ')[1:]
-    P3 = np.array(obj, dtype=np.float32)
-    obj = lines[4].strip().split(' ')[1:]
-    R0 = np.array(obj, dtype=np.float32)
-    obj = lines[5].strip().split(' ')[1:]
-    Tr_velo_to_cam = np.array(obj, dtype=np.float32)
-    obj = lines[6].strip().split(' ')[1:]
-    Tr_imu_to_velo = np.array(obj, dtype=np.float32)
-
-    return {'P2': P2.reshape(3, 4),
-            'R0': R0.reshape(3, 3),
-            'Tr_velo2cam': Tr_velo_to_cam.reshape(3, 4)}
 
 def angle_in_limit(angle):
     # To limit the angle in -pi/2 - pi/2
@@ -342,29 +281,5 @@ def get_anchor3d(anchors):
     anchors3d[:, 4:, 2] = cfg.z_a + cfg.h_a
     return anchors3d
 '''
-
-def load_kitti_label(label_file, Tr):
-
-    with open(label_file,'r') as f:
-        lines = f.readlines()
-
-    gt_boxes3d_corner = []
-    num_obj = len(lines)
-
-    for j in range(num_obj):
-        obj = lines[j].strip().split(' ')
-
-        obj_class = obj[0].strip()
-        if obj_class not in classes:
-            continue
-
-        box3d_corner = box3d_cam_to_velo(obj[8:], Tr)
-
-        gt_boxes3d_corner.append(box3d_corner)
-
-    gt_boxes3d_corner = np.array(gt_boxes3d_corner).reshape(-1,8,3)
-
-    return gt_boxes3d_corner
-
 
 

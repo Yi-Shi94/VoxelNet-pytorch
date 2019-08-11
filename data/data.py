@@ -36,7 +36,6 @@ class KITDataset(data.Dataset):
         self.vox_height = conf_dict['vox_h']
         self.classes = conf_dict['classes'] 
         self.pt_thres_per_vox = conf_dict['pt_thres_per_vox'] 
-        self.anchors = conf_dict['anchors']
         self.anchors_per_vox = conf_dict['anchors_per_vox']
         self.pos_threshold = conf_dict['pos_threshold']
         self.neg_threshold = conf_dict['neg_threshold']
@@ -44,7 +43,7 @@ class KITDataset(data.Dataset):
         self.H = (max(self.range_x)-min(self.range_x))//self.vox_height
         self.W = (max(self.range_y)-min(self.range_y))//self.vox_width
         self.D = (max(self.range_z)-min(self.range_z))//self.vox_depth
-        self.anchors = self.anchors.reshape(-1,7)
+       
         self.feature_map_shape = (int(self.H / 2), int(self.W / 2))
                                         
         x = np.linspace(range_x[0]+self.vox_width, range_x[1]-self.vox_width, self.W/2)
@@ -60,6 +59,7 @@ class KITDataset(data.Dataset):
         r[..., 0] = 0
         r[..., 1] = np.pi/2
         self.anchors = np.stack([cx, cy, cz, h, w, l, r], axis=-1)
+        self.anchors = self.anchors.reshape(-1,7)
                                 
                                         
     def cal_target(self, gt_box3d):
