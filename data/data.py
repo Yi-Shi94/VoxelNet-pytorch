@@ -18,7 +18,7 @@ import yaml
 
 
 class KITDataset(data.Dataset):
-    def __init__(self, conf_dict, root_path='~/dataset/voxelnet',setting='train',data_type='velodyne_train'):
+    def __init__(self, conf_dict, root_path='/home/screentest/dataset/voxelnet',setting='train',data_type='velodyne_train'):
         
         
         self.data_root_path = root_path
