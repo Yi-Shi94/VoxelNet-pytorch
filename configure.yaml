@@ -22,11 +22,11 @@ vox_d: 0.4
 vox_w: 0.2
 vox_h: 0.2
 
-anchors_per_vox = 2
-nms_threshold = 0.1
-score_threshold = 0.8
-iou_pos_threshold = 0.6
-iou_neg_threshold = 0.45
+anchors_per_vox: 2
+nms_threshold: 0.1
+score_threshold: 0.8
+iou_pos_threshold: 0.6
+iou_neg_threshold: 0.45
 pt_thres_per_vox: 40
 
 classes:
