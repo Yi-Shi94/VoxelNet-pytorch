@@ -137,7 +137,7 @@ class KITDataset(data.Dataset):
         return pos_equal_one, neg_equal_one, targets
 
     def voxelize(self, lidar): #preprocessing
-        voxel_coords = ((lidar[:, :3] - np.array([self.range_X[0], self.range_y[0], self.range_z[0]])) / (
+        voxel_coords = ((lidar[:, :3] - np.array([self.range_x[0], self.range_y[0], self.range_z[0]])) / (
                         self.vox_width, self.vox_height, self.vox_depth)).astype(np.int32)
         # convert to  (D, H, W)
         voxel_coords = voxel_coords[:,[2,1,0]]                    
