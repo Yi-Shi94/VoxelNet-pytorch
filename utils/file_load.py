@@ -63,7 +63,7 @@ def read_label(file_path):
         bbox_3d = coords_3d[coords_keep_indices,:]
         return bbox_2d,bbox_3d
 
-def generate_file_path(file_index,mode="training):
+def generate_file_path(file_index,mode="training"):
     parent_pth = "~/dataset/voxelnet/"
     file_name = "%06d"%(file_index)
     img = os.path.join(parent_pth,mode,'image_2',  file_name+'.png')
