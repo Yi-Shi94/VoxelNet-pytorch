@@ -4,6 +4,7 @@ import torch
 import torch.nn.init as init
 from torch.autograd import Variable
 import yaml
+import math
 
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
