@@ -158,10 +158,7 @@ class KITDataset(data.Dataset):
             voxel_features.append(voxel)
         voxel_features = np.array(voxel_features)
         return voxel_features, voxel_coords
-    
-
-    
-                                        
+                           
     def __getitem__(self, index):
         image_file_path, lidar_file_path, calib_file_path, label_file_path = generate_file_path(index,self.data_root_path)
         calib = read_cal(calib_file_path)['Tr_velo_to_cam']

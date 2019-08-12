@@ -176,13 +176,13 @@ class VoxelNet(nn.Module):
         print("sf:",sparse_features.data.shape)
         print("dim:",dim)
         if if_cuda:
-            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
+            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda()).transpose(0,1)
         else:
-            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W))
+            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W)).transpose(0,1)
         print("coords:",coords.data.shape)
         print("dense:",dense_feature.data.shape)
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features
-        return dense_feature.transpose(0,1)
+        return dense_feature
 
     def forward(self, voxel_features, voxel_coords):
         # feature learning network
