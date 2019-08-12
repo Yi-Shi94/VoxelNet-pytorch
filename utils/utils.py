@@ -107,26 +107,6 @@ def lidar_to_bev(lidar):
 
     return top, density_image
 
-
-def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,0,0), line_width=2):
-
-    num = len(gt_boxes3d)
-    for n in range(num):
-        b = gt_boxes3d[n]
-
-        for k in range(0,4):
-
-            i,j=k,(k+1)%4
-            mlab.plot3d([b[i,0], b[j,0]], [b[i,1], b[j,1]], [b[i,2], b[j,2]], color=color, tube_radius=None, line_width=line_width, figure=fig)
-
-            i,j=k+4,(k+3)%4 + 4
-            mlab.plot3d([b[i,0], b[j,0]], [b[i,1], b[j,1]], [b[i,2], b[j,2]], color=color, tube_radius=None, line_width=line_width, figure=fig)
-
-            i,j=k,k+4
-            mlab.plot3d([b[i,0], b[j,0]], [b[i,1], b[j,1]], [b[i,2], b[j,2]], color=color, tube_radius=None, line_width=line_width, figure=fig)
-
-    mlab.view(azimuth=180,elevation=None,distance=50,focalpoint=[ 12.0909996 , -1.04700089, -2.03249991])#2.0909996 , -1.04700089, -2.03249991
-
 def project_velo2rgb(velo,calib):
     T=np.zeros([4,4],dtype=np.float32)
     T[:3,:]=calib['Tr_velo2cam']

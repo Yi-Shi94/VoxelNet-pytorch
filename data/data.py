@@ -18,15 +18,19 @@ import yaml
 import math
 
 class KITDataset(data.Dataset):
-    def __init__(self, conf_dict, root_path='/home/screentest/dataset/voxelnet',setting='train',data_type='velodyne_train'):
+    def __init__(self, conf_dict, root_path='/home/screentest/dataset/voxelnet',setting='train'):
         
         self.data_root_path = root_path
-        self.data_type = data_type
         self.setting = setting
-        self.record_path = os.path.join(root_path,setting+'.txt')
-        with open(self.record_path) as f:
-            lines = f.readlines()                            
-            self.file_paths = list(map(lambda x:x.strip('\n'),lines))
+        
+        if setting=='test':
+            #self.record_path = os.path.join(root_path,setting+'.txt')
+            pass
+        else:
+            self.record_path = os.path.join(root_path,setting+'.txt')
+            with open(self.record_path) as f:
+                lines = f.readlines()                            
+                self.file_paths = list(map(lambda x:x.strip('\n'),lines))
                           
         self.range_x=conf_dict['range_x']
         self.range_y=conf_dict['range_y']
@@ -165,11 +169,11 @@ class KITDataset(data.Dataset):
         lidars = read_velodyne_points(lidar_file_path)
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         image = cv2.imread(image_file_path)  
-        gt_box3d = read_label(label_file_path,calib,self.classes)        
-        
-        if self.setting=='train':
+        if self.setting !='test':
+            gt_box3d = read_label(label_file_path,calib,self.classes)        
             # online data augmentation
-            lidars, gt_box3d = aug_data(lidars, gt_box3d)
+            if self.setting =='train':
+                lidars, gt_box3d = aug_data(lidars, gt_box3d)
             # specify a range
             lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             # voxelize
@@ -179,11 +183,10 @@ class KITDataset(data.Dataset):
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
 
         else:
-            lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
+            #lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(lidars)
-            pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            
-            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
+            #pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
+            return voxel_features, voxel_coords, image, calib, self.file_paths[index]
         
 
     def __len__(self):

@@ -12,7 +12,6 @@ import numpy as np
 from glob import glob
 
 import cv2
-
 from utils.utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
 from data.data import KITDataset 
 from box_overlaps import bbox_overlaps
@@ -68,9 +67,11 @@ batch_size = conf_dict['batch_size']
 learning_rate = conf_dict["lr"]
 a = conf_dict["alpha"]
 b = conf_dict["beta"]
+classes = '_'.join(conf["classes"])
+
 epoch_num = conf_dict["epoch"]
 chk_pth = conf_dict["chk_pth"]
-print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_param_alpha:{}, loss_param_beta:{},".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, a, b))
+print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_param_alpha:{}, loss_param_beta:{}, classes: {}".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, a, b,classes))
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 print("----------------------------------------")
@@ -84,23 +85,21 @@ kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_worker
 net = VoxelNet()
 if if_cuda:
     net.cuda()
+net.train()
+if if_continued:
+    print('Loading pre-trained weights...')
+    chk = glob(chk_pth+'/*')[-1]
+    net.load_state_dict(torch.load(chk))
+    net.eval()
+else:       
+    # initialization
+    print('Initializing weights...')
+    net.apply(weights_init)
     
 def mytrain():
     log_file = open('./log.txt','w')
-    net.train()
-   
-    if if_continued:
-        print('Loading pre-trained weights...')
-        chk = glob(chk_pth+'/*')[-1]
-        net.load_state_dict(torch.load(chk))
-        net.eval()
-    else:       
-        # initialization
-        print('Initializing weights...')
-        net.apply(weights_init)
-    
-    optimizer = optim.SGD(net.parameters(), lr=0.01)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
+    optimizer = optim.SGD(net.parameters(), lr=learning_rate)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=int(epoch_num/2), gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
     batch_per_epoch = len(kit_data_loader)//batch_size
     # training process
@@ -131,17 +130,20 @@ def mytrain():
             loss = conf_loss + reg_loss
             loss.backward()
             optimizer.step()
-            if batch_index % 100  == 0:
+            
+            if batch_index % 25  == 0:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
                   (loss.item(), conf_loss.item(), reg_loss.item())
-                print(res)
+                
                 log_file.write(res)
                 
-        if epoch % 5 ==0:
-            torch.save(net.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
-                
+        if epoch % 3 ==0:
+            log_file.write("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
+            torch.save(net.state_dict(), chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
+    log_file.close()
+    
 if __name__ == '__main__':
     mytrain()
       

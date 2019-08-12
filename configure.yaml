@@ -1,11 +1,13 @@
 if_cuda: 1
 batch_size: 2
 if_continued: 0
-lr: 0.001
+lr: 0.01
 alpha: 0.5
 beta: 1
 epoch: 50
 chk_pth: "./checkpoints"
+chk_pth_infer: "./checkpoints/"
+
 range_x:
     - 0
     - 70.4
@@ -30,7 +32,7 @@ iou_neg_threshold: 0.45
 pt_thres_per_vox: 35
 
 classes:
-    #- "Car"
+    - "Car"
     #- "Van"
-    - "Cyclist"
-    - "Pedestrian"
+    #- "Cyclist"
+    #- "Pedestrian"
