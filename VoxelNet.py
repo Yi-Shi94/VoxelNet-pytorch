@@ -1,5 +1,3 @@
-from __future__ import division
-
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -27,7 +25,6 @@ H = math.ceil((max(range_x)-min(range_x))/vox_height)
 W = math.ceil((max(range_y)-min(range_y))/vox_width)
 D = math.ceil((max(range_z)-min(range_z))/vox_depth)
        
-print(H,W,D)
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
         init.xavier_uniform_(m.weight.data)
@@ -89,7 +86,7 @@ class VFE(nn.Module):
     def __init__(self,cin,cout):
         super(VFE, self).__init__()
         assert cout % 2 == 0
-        self.units = int(cout // 2)
+        self.units = cout // 2
         self.fcn = FCN(cin,self.units)
 
     def forward(self, x, mask):
