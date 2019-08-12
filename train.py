@@ -67,7 +67,7 @@ batch_size = conf_dict['batch_size']
 learning_rate = conf_dict["lr"]
 a = conf_dict["alpha"]
 b = conf_dict["beta"]
-classes = '_'.join(conf["classes"])
+classes = '_'.join(conf_dict["classes"])
 
 epoch_num = conf_dict["epoch"]
 chk_pth = conf_dict["chk_pth"]
