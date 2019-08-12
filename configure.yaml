@@ -8,7 +8,7 @@ epoch: 50
 chk_pth: "./checkpoints"
 range_x:
     - 0
-    - 70
+    - 70.4
  
 range_y:
     - -40

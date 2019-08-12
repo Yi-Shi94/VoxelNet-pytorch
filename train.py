@@ -27,7 +27,8 @@ import torch.utils.data as data
 import torch.backends.cudnn
 import torch.optim as optim
 import torch.nn.init as init
-
+import warnings
+warnings.filterwarnings("ignore")
 
 yamlPath = "configure.yaml"
 f = open(yamlPath, 'r', encoding='utf-8')
@@ -130,7 +131,7 @@ def mytrain():
             loss = conf_loss + reg_loss
             loss.backward()
             optimizer.step()
-            if batch_index % 5 == 0:
+            if batch_index % 100  == 0:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
@@ -138,8 +139,8 @@ def mytrain():
                 print(res)
                 log_file.write(res)
                 
-            if epoch % 4 ==0:
-                torch.save(model.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
+        if epoch % 5 ==0:
+            torch.save(net.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
                 
 if __name__ == '__main__':
     mytrain()
