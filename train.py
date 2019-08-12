@@ -108,10 +108,16 @@ def mytrain():
         for batch_index, contents in enumerate(kit_data_loader):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
-            voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
-            pos_equal_one = Variable(torch.cuda.FloatTensor(pos_equal_one))
-            neg_equal_one = Variable(torch.cuda.FloatTensor(neg_equal_one))
-            targets = Variable(torch.cuda.FloatTensor(targets))
+            if if_cuda:
+                voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
+                pos_equal_one = Variable(torch.cuda.FloatTensor(pos_equal_one))
+                neg_equal_one = Variable(torch.cuda.FloatTensor(neg_equal_one))
+                targets = Variable(torch.cuda.FloatTensor(targets))
+            else:
+                voxel_features = Variable(torch.FloatTensor(voxel_features))
+                pos_equal_one = Variable(torch.FloatTensor(pos_equal_one))
+                neg_equal_one = Variable(torch.FloatTensor(neg_equal_one))
+                targets = Variable(torch..FloatTensor(targets))
 
             # zero the parameter gradients
             optimizer.zero_grad()

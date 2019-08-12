@@ -14,8 +14,7 @@ def read_img(file_path):
     return cvt(cv2.imread(file_path))
 
 def read_velodyne_points(file_path):
-    points = np.fromfile(file_path, dtype=np.float32).reshape(-1, 4)
-    return points   
+    return np.fromfile(file_path, dtype=np.float32).reshape(-1, 4)
 
 def prepare_velodyne_points(pts3d_raw,range_x = None,range_y = None, range_z = None):
     '''Replaces the reflectance value by 1, and tranposes the array, so
@@ -87,8 +86,8 @@ def read_label(file_path,Tr,classes):
 def generate_file_path(file_index,root_path,mode="training"):
     parent_pth = root_path
     file_name = "%06d"%(file_index)
-    img = os.path.join(parent_pth, mode,'image_2',  file_name+'.png')
-    lid = os.path.join(parent_pth, mode,'crop', file_name+'.bin')
-    cal = os.path.join(parent_pth, mode,'calib',    file_name+'.txt')
-    label = os.path.join(parent_pth,mode,'label_2', file_name+'.txt')
+    img = os.path.join(parent_pth,  mode,'image_2',  file_name+'.png')
+    lid = os.path.join(parent_pth,  mode,'crop',     file_name+'.bin')
+    cal = os.path.join(parent_pth,  mode,'calib',    file_name+'.txt')
+    label = os.path.join(parent_pth,mode,'label_2',  file_name+'.txt')
     return [img,lid,cal,label]
