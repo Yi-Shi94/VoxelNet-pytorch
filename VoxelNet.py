@@ -178,7 +178,7 @@ class VoxelNet(nn.Module):
         print("coords:",coords.data.shape)
         print("dense:",dense_feature.data.shape)
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(1, 0)
-        return dense_feature.transpose(1,0)
+        return dense_feature.permute(1,0,2,3,4)
 
     def forward(self, voxel_features, voxel_coords):
         # feature learning network
@@ -188,5 +188,5 @@ class VoxelNet(nn.Module):
         cml_out = self.cml(vwfs)
         # region proposal network
         # merge the depth and feature dim into one, output probability score map and regression map
-        psm,rm = self.rpn(cml_out.view(conf_dict['batch_size'],-1, H, W))
+        psm,rm = self.rpn(cml_out.view(conf_dict['batch_size'], -1, H, W))
         return psm, rm
