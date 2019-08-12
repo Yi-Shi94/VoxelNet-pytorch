@@ -21,6 +21,7 @@ from data_aug import aug_data
 from VoxelNet import VoxelNet,weights_init
 from VoxelLoss import VoxelLoss
 
+from torch.autograd import Variable
 import torch
 import torch.utils.data as data
 import torch.backends.cudnn
@@ -103,7 +104,8 @@ def mytrain():
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
-        for batch_index, contents in enumerate(tqdm(kit_data_loader)):
+        #for batch_index, contents in enumerate(tqdm(kit_data_loader)):
+        for batch_index, contents in enumerate(kit_data_loader):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
             voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
@@ -123,7 +125,7 @@ def mytrain():
             optimizer.step()
             if epoch % 4 ==0:
                  torch.save(model.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
-            if batch_index % 10 == 0:
+            if batch_index % 5 == 0:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
