@@ -76,7 +76,7 @@ def detection_collate(batch):
 
 print("------------------------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=4, \
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=1, \
                               collate_fn=detection_collate, \
                               pin_memory=False)
 

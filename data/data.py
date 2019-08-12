@@ -23,11 +23,9 @@ class KITDataset(data.Dataset):
         self.data_root_path = root_path
         self.setting = setting
         
-        if setting=='test':
+        if self.setting!='test':
             #self.record_path = os.path.join(root_path,setting+'.txt')
-            pass
-        else:
-            self.record_path = os.path.join(root_path,setting+'.txt')
+            self.record_path = os.path.join(self.data_root_path,self.setting+'.txt')
             with open(self.record_path) as f:
                 lines = f.readlines()                            
                 self.file_paths = list(map(lambda x:x.strip('\n'),lines))
@@ -186,7 +184,7 @@ class KITDataset(data.Dataset):
             #lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(lidars)
             #pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            return voxel_features, voxel_coords, image, calib, self.file_paths[index]
+            return voxel_features, voxel_coords, image, calib
         
 
     def __len__(self):
