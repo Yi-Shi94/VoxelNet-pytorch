@@ -1,4 +1,5 @@
 from __future__ import division
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -13,16 +14,20 @@ conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
 if_cuda = True if conf_dict['if_cuda'] == 1 else False
+batch_size = conf_dict['batch_size']
 range_x=conf_dict['range_x']
 range_y=conf_dict['range_y']
 range_z=conf_dict['range_z']
 vox_depth = conf_dict['vox_d']
 vox_width = conf_dict['vox_w']
 vox_height = conf_dict['vox_h']
+anchor_per_pos = conf_dict['anchors_per_vox']
+pt_thres_per_vox = conf_dict['pt_thres_per_vox']
 H = math.ceil((max(range_x)-min(range_x))/vox_height)
 W = math.ceil((max(range_y)-min(range_y))/vox_width)
 D = math.ceil((max(range_z)-min(range_z))/vox_depth)
        
+print(H,W,D)
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
         init.xavier_uniform_(m.weight.data)
@@ -84,14 +89,14 @@ class VFE(nn.Module):
     def __init__(self,cin,cout):
         super(VFE, self).__init__()
         assert cout % 2 == 0
-        self.units = cout // 2
+        self.units = int(cout // 2)
         self.fcn = FCN(cin,self.units)
 
     def forward(self, x, mask):
         # point-wise feauture
         pwf = self.fcn(x)
         #locally aggregated feature
-        laf = torch.max(pwf,1)[0].unsqueeze(1).repeat(1,conf_dict['pt_thres_per_vox'],1)
+        laf = torch.max(pwf,1)[0].unsqueeze(1).repeat(1,pt_thres_per_vox,1)
         # point-wise concat feature
         pwcf = torch.cat((pwf,laf),dim=2)
         # apply mask
@@ -151,8 +156,8 @@ class RPN(nn.Module):
         self.deconv_2 = nn.Sequential(nn.ConvTranspose2d(128, 256, 2, 2, 0),nn.BatchNorm2d(256))
         self.deconv_3 = nn.Sequential(nn.ConvTranspose2d(128, 256, 1, 1, 0),nn.BatchNorm2d(256))
 
-        self.score_head = Conv2d(768, conf_dict['anchors_per_vox'], 1, 1, 0, activation=False, batch_norm=False)
-        self.reg_head = Conv2d(768, 7 * conf_dict['anchors_per_vox'], 1, 1, 0, activation=False, batch_norm=False)
+        self.score_head = Conv2d(768, anchor_per_pos, 1, 1, 0, activation=False, batch_norm=False)
+        self.reg_head = Conv2d(768, 7 * anchor_per_pos, 1, 1, 0, activation=False, batch_norm=False)
 
     def forward(self,x):
         x = self.block_1(x)
@@ -176,9 +181,9 @@ class VoxelNet(nn.Module):
     def voxel_indexing(self, sparse_features, coords):
         dim = sparse_features.shape[-1]
         if if_cuda:
-            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
+            dense_feature = Variable(torch.zeros(dim, batch_size, D, H, W).cuda())
         else:
-            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W))
+            dense_feature = Variable(torch.zeros(dim, batch_size, D, H, W))
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(1,0)
         return dense_feature.transpose(0,1)
 
@@ -190,5 +195,5 @@ class VoxelNet(nn.Module):
         cml_out = self.cml(vwfs)
         # region proposal network
         # merge the depth and feature dim into one, output probability score map and regression map
-        psm,rm = self.rpn(cml_out.view(conf_dict['batch_size'], -1, H, W))
+        psm,rm = self.rpn(cml_out.view(batch_size, -1, H, W))
         return psm, rm

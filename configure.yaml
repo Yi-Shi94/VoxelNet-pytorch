@@ -31,5 +31,6 @@ pt_thres_per_vox: 35
 
 classes:
     #- "Car"
+    #- "Van"
     - "Cyclist"
     - "Pedestrian"
