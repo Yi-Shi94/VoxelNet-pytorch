@@ -117,7 +117,7 @@ def mytrain():
                 voxel_features = Variable(torch.FloatTensor(voxel_features))
                 pos_equal_one = Variable(torch.FloatTensor(pos_equal_one))
                 neg_equal_one = Variable(torch.FloatTensor(neg_equal_one))
-                targets = Variable(torch..FloatTensor(targets))
+                targets = Variable(torch.FloatTensor(targets))
 
             # zero the parameter gradients
             optimizer.zero_grad()
