@@ -177,8 +177,8 @@ class VoxelNet(nn.Module):
         dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
         print("coords:",coords.data.shape)
         print("dense:",dense_feature.data.shape)
-        dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features
-        return dense_feature
+        dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(1, 0)
+        return dense_feature.transpose(0, 1)
 
     def forward(self, voxel_features, voxel_coords):
         # feature learning network
