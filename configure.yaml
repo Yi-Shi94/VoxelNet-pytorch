@@ -1,4 +1,4 @@
-if_cuda: 0
+if_cuda: 1
 batch_size: 2
 if_continued: 0
 lr: 0.001
@@ -25,11 +25,11 @@ vox_h: 0.2
 anchors_per_vox: 2
 nms_threshold: 0.1
 score_threshold: 0.96
-iou_pos_threshold: 0.6
+iou_pos_threshold: 0.5
 iou_neg_threshold: 0.45
 pt_thres_per_vox: 35
 
 classes:
-    - "Car"
+    #- "Car"
     - "Cyclist"
     - "Pedestrian"
