@@ -187,7 +187,9 @@ class VoxelNet(nn.Module):
     def forward(self, voxel_features, voxel_coords):
         # feature learning network
         vwfs = self.svfe(voxel_features)
+        
         vwfs = self.voxel_indexing(vwfs,voxel_coords)
+        print (vwfs.shape)
         # convolutional middle network
         cml_out = self.cml(vwfs)
         # region proposal network
