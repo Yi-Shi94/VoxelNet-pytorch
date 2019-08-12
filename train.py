@@ -139,7 +139,7 @@ def mytrain():
                 print(res)
                 #log_file.write(res)
                 
-        if epoch % 3 ==0:
+        if epoch % 10 ==0:
             print("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
             torch.save(net.state_dict(), chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
     log_file.close()
