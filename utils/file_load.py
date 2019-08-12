@@ -88,7 +88,7 @@ def generate_file_path(file_index,root_path,mode="training"):
     parent_pth = root_path
     file_name = "%06d"%(file_index)
     img = os.path.join(parent_pth, mode,'image_2',  file_name+'.png')
-    vel = os.path.join(parent_pth, mode,'velodyne', file_name+'.bin')
+    lid = os.path.join(parent_pth, mode,'crop', file_name+'.bin')
     cal = os.path.join(parent_pth, mode,'calib',    file_name+'.txt')
     label = os.path.join(parent_pth,mode,'label_2', file_name+'.txt')
-    return [img,vel,cal,label]
+    return [img,lid,cal,label]
