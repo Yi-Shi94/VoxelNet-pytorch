@@ -11,7 +11,7 @@ f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
-if_cuda = True if conf_dict['if_cuda'] == '1' else False
+if_cuda = True if conf_dict['if_cuda'] == 1 else False
 range_x=conf_dict['range_x']
 range_y=conf_dict['range_y']
 range_z=conf_dict['range_z']
