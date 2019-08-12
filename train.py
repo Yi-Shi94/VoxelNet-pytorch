@@ -75,7 +75,8 @@ if if_cuda:
 print("----------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict)
 kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
-                              collate_fn=detection_collate, shuffle=True, \
+                              collate_fn=detection_collate, \ 
+                              shuffle=True, \
                               pin_memory=False)
 
 # network
@@ -129,16 +130,17 @@ def mytrain():
             loss = conf_loss + reg_loss
             loss.backward()
             optimizer.step()
-            if epoch % 4 ==0:
-                 torch.save(model.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
             if batch_index % 5 == 0:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
-                  (loss.data[0], conf_loss.data[0], reg_loss.data[0])
+                  (loss.item(), conf_loss.item(), reg_loss.item())
                 print(res)
                 log_file.write(res)
-    
+                
+            if epoch % 4 ==0:
+                torch.save(model.state_dict(), chk_pth+'/chk_'+str(epoch)+'.pth')
+                
 if __name__ == '__main__':
     mytrain()
       

@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import cv2
 import yaml
-
+import math
 
 class KITDataset(data.Dataset):
     def __init__(self, conf_dict, root_path='/home/screentest/dataset/voxelnet',setting='train',data_type='velodyne_train'):
@@ -40,14 +40,14 @@ class KITDataset(data.Dataset):
         self.pos_threshold = conf_dict['iou_pos_threshold']
         self.neg_threshold = conf_dict['iou_neg_threshold']
                                         
-        self.H = (max(self.range_x)-min(self.range_x))//self.vox_height
-        self.W = (max(self.range_y)-min(self.range_y))//self.vox_width
-        self.D = (max(self.range_z)-min(self.range_z))//self.vox_depth
+        self.H = math.ceil((max(self.range_x)-min(self.range_x))/self.vox_height)
+        self.W = math.ceil((max(self.range_y)-min(self.range_y))/self.vox_width)
+        self.D = math.ceil((max(self.range_z)-min(self.range_z))/self.vox_depth)
        
         self.feature_map_shape = (int(self.H / 2), int(self.W / 2))
                                         
-        x = np.linspace(self.range_x[0]+self.vox_width, self.range_x[1]-self.vox_width, self.W/2)
-        y = np.linspace(self.range_y[0]+self.vox_height, self.range_x[1]-self.vox_height, self.H/2)
+        x = np.linspace(self.range_x[0]+self.vox_width, self.range_x[1]-self.vox_width, int(self.W/2))
+        y = np.linspace(self.range_y[0]+self.vox_height, self.range_x[1]-self.vox_height, int(self.H/2))
         cx, cy = np.meshgrid(x, y)
         cx = np.tile(cx[..., np.newaxis], 2)
         cy = np.tile(cy[..., np.newaxis], 2)
@@ -177,8 +177,7 @@ class KITDataset(data.Dataset):
             # bounding-box encoding
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
-        
-       
+
         else:
             lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(lidars)

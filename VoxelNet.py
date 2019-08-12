@@ -17,9 +17,9 @@ range_z=conf_dict['range_z']
 vox_depth = conf_dict['vox_d']
 vox_width = conf_dict['vox_w']
 vox_height = conf_dict['vox_h']
-H = int((max(range_x)-min(range_x))/vox_height)
-W = int((max(range_y)-min(range_y))/vox_width)
-D = int((max(range_z)-min(range_z))/vox_depth)
+H = math.ceil((max(range_x)-min(range_x))/vox_height)
+W = math.ceil((max(range_y)-min(range_y))/vox_width)
+D = math.ceil((max(range_z)-min(range_z))/vox_depth)
        
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
@@ -173,14 +173,10 @@ class VoxelNet(nn.Module):
         
     def voxel_indexing(self, sparse_features, coords):
         dim = sparse_features.shape[-1]
-        print("sf:",sparse_features.data.shape)
-        print("dim:",dim)
         if if_cuda:
             dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
         else:
             dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W))
-        print("coords:",coords.data.shape)
-        print("dense:",dense_feature.data.shape)
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(0,1)
         return dense_feature.transpose(0,1)
 
