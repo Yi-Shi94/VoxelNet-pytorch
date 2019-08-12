@@ -185,11 +185,13 @@ class VoxelNet(nn.Module):
         return dense_feature.transpose(0,1)
 
     def forward(self, voxel_features, voxel_coords):
+        print ("vf:",voxel_features.shape)
+        print ("vc:",voxel_coords.shape)
         # feature learning network
         vwfs = self.svfe(voxel_features)
-        
+        print ("vw0:",vwfs.shape)
         vwfs = self.voxel_indexing(vwfs,voxel_coords)
-        print (vwfs.shape)
+        print ("vw1:",vwfs.shape)
         # convolutional middle network
         cml_out = self.cml(vwfs)
         # region proposal network
