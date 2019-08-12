@@ -10,6 +10,16 @@ f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
+range_x=conf_dict['range_x']
+range_y=conf_dict['range_y']
+range_z=conf_dict['range_z']
+vox_depth = conf_dict['vox_d']
+vox_width = conf_dict['vox_w']
+vox_height = conf_dict['vox_h']
+H = int((max(range_x)-min(range_x))/vox_height)
+W = int((max(range_y)-min(range_y))/vox_width)
+D = int((max(range_z)-min(range_z))/vox_depth)
+       
 def weights_init(m):
     if isinstance(m, nn.Conv2d):
         init.xavier_uniform_(m.weight.data)
@@ -162,7 +172,7 @@ class VoxelNet(nn.Module):
         
     def voxel_indexing(self, sparse_features, coords):
         dim = sparse_features.shape[-1]
-        dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], conf_dict['vox_d'], conf_dict['vox_h'], conf_dict['vox_w']).cuda())
+        dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features
         return dense_feature.transpose(0, 1)
 
@@ -174,5 +184,5 @@ class VoxelNet(nn.Module):
         cml_out = self.cml(vwfs)
         # region proposal network
         # merge the depth and feature dim into one, output probability score map and regression map
-        psm,rm = self.rpn(cml_out.view(conf_dict['batch_size'],-1,conf_dict['vox_h'], conf_dict['vox_w']))
+        psm,rm = self.rpn(cml_out.view(conf_dict['batch_size'],-1, H, W))
         return psm, rm
