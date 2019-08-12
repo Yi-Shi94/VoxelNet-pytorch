@@ -99,7 +99,7 @@ else:
 def mytrain():
     log_file = open('./log.txt','w')
     optimizer = optim.SGD(net.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=int(epoch_num/2), gamma=0.1)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=int(epoch_num/5), gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
     batch_per_epoch = len(kit_data_loader)//batch_size
     # training process
@@ -131,7 +131,7 @@ def mytrain():
             loss.backward()
             optimizer.step()
             
-            if batch_index % 10  == 0:
+            if batch_index % 20  == 0 or batch_index >= batch_per_epoch-1:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \

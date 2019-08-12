@@ -4,7 +4,7 @@ if_continued: 0
 lr: 0.01
 alpha: 0.5
 beta: 1
-epoch: 50
+epoch: 150
 chk_pth: "./checkpoints"
 chk_pth_infer: "./checkpoints/"
 
