@@ -131,16 +131,16 @@ def mytrain():
             loss.backward()
             optimizer.step()
             
-            if batch_index % 25  == 0:
+            if batch_index % 10  == 0:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
                   (loss.item(), conf_loss.item(), reg_loss.item())
-                
-                log_file.write(res)
+                print(res)
+                #log_file.write(res)
                 
         if epoch % 3 ==0:
-            log_file.write("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
+            print("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
             torch.save(net.state_dict(), chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
     log_file.close()
     
