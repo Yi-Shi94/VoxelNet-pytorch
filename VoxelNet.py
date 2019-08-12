@@ -10,6 +10,7 @@ f = open(yamlPath, 'r', encoding='utf-8')
 conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
+if_cuda = True if conf_dict['if_cuda'] == '1' else False
 range_x=conf_dict['range_x']
 range_y=conf_dict['range_y']
 range_z=conf_dict['range_z']
@@ -174,7 +175,10 @@ class VoxelNet(nn.Module):
         dim = sparse_features.shape[-1]
         print("sf:",sparse_features.data.shape)
         print("dim:",dim)
-        dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
+        if if_cuda:
+            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
+        else:
+            dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W))
         print("coords:",coords.data.shape)
         print("dense:",dense_feature.data.shape)
         dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(1, 0)
