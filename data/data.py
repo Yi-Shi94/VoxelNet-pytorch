@@ -40,8 +40,8 @@ class KITDataset(data.Dataset):
         self.pos_threshold = conf_dict['iou_pos_threshold']
         self.neg_threshold = conf_dict['iou_neg_threshold']
                                         
-        self.H = math.ceil((max(self.range_x)-min(self.range_x))/self.vox_height)
-        self.W = math.ceil((max(self.range_y)-min(self.range_y))/self.vox_width)
+        self.W = math.ceil((max(self.range_x)-min(self.range_x))/self.vox_width)
+        self.H = math.ceil((max(self.range_y)-min(self.range_y))/self.vox_height)
         self.D = math.ceil((max(self.range_z)-min(self.range_z))/self.vox_depth)
        
         self.feature_map_shape = (int(self.H / 2), int(self.W / 2))

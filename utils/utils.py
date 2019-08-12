@@ -22,12 +22,12 @@ anchors_per_vox = conf_dict['anchors_per_vox']
 pos_threshold = conf_dict['iou_pos_threshold']
 neg_threshold = conf_dict['iou_neg_threshold']
 
-H = (max(range_x)-min(range_x))//vox_height
-W = (max(range_y)-min(range_y))//vox_width
-D = (max(range_z)-min(range_z))//vox_depth
+W = math.ceil((max(range_x)-min(range_x))/vox_width)
+H = math.ceil((max(range_y)-min(range_y))/vox_height)
+D = math.ceil((max(range_z)-min(range_z))/vox_depth)
 feature_map_shape = (int(H / 2), int(W / 2))
-x = np.linspace(range_x[0]+vox_width, range_x[1]-vox_width, W/2)
-y = np.linspace(range_y[0]+vox_height, range_x[1]-vox_height, H/2)
+x = np.linspace(range_x[0]+vox_width, range_x[1]-vox_width, int(W/2))
+y = np.linspace(range_y[0]+vox_height, range_x[1]-vox_height, int(H/2))
 cx, cy = np.meshgrid(x, y)
 cx = np.tile(cx[..., np.newaxis], 2)
 cy = np.tile(cy[..., np.newaxis], 2)

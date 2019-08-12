@@ -21,8 +21,8 @@ vox_width = conf_dict['vox_w']
 vox_height = conf_dict['vox_h']
 anchor_per_pos = conf_dict['anchors_per_vox']
 pt_thres_per_vox = conf_dict['pt_thres_per_vox']
-H = math.ceil((max(range_x)-min(range_x))/vox_height)
-W = math.ceil((max(range_y)-min(range_y))/vox_width)
+W = math.ceil((max(range_x)-min(range_x))/vox_width)
+H = math.ceil((max(range_y)-min(range_y))/vox_height)
 D = math.ceil((max(range_z)-min(range_z))/vox_depth)
        
 def weights_init(m):
