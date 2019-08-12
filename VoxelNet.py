@@ -1,3 +1,4 @@
+from __future__ import division
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -178,7 +179,7 @@ class VoxelNet(nn.Module):
             dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W).cuda())
         else:
             dense_feature = Variable(torch.zeros(dim, conf_dict['batch_size'], D, H, W))
-        dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(0,1)
+        dense_feature[:, coords[:,0], coords[:,1], coords[:,2], coords[:,3]]= sparse_features.transpose(1,0)
         return dense_feature.transpose(0,1)
 
     def forward(self, voxel_features, voxel_coords):
