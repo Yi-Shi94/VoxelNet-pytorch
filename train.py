@@ -74,8 +74,9 @@ chk_pth = conf_dict["chk_pth"]
 print("batch_size:{}, if_continued:{}, if_cuda: {} , epoch_num:{}, learning_rate:{}, loss_param_alpha:{}, loss_param_beta:{}, classes: {}".format(batch_size, if_continued, if_cuda, epoch_num, learning_rate, a, b,classes))
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    
 print("----------------------------------------")
-kit_dataset= KITDataset(conf_dict=conf_dict)
+kit_dataset= KITDataset(conf_dict=conf_dict, setting='train')
 kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
                               collate_fn=detection_collate, \
                               shuffle=True, \
@@ -97,11 +98,10 @@ else:
     net.apply(weights_init)
     
 def mytrain():
-    log_file = open('./log.txt','w')
     optimizer = optim.SGD(net.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=int(epoch_num/5), gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
-    batch_per_epoch = len(kit_data_loader)//batch_size
+    batch_per_epoch = len(kit_data_loader)
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
@@ -131,7 +131,7 @@ def mytrain():
             loss.backward()
             optimizer.step()
             
-            if batch_index % 20  == 0 or batch_index >= batch_per_epoch-1:
+            if batch_index % 20  == 0 or batch_index == batch_per_epoch-1:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
@@ -142,7 +142,7 @@ def mytrain():
         if epoch % 10 ==0:
             print("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
             torch.save(net.state_dict(), chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
-    log_file.close()
+    
     
 if __name__ == '__main__':
     mytrain()
