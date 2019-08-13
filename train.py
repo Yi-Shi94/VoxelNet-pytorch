@@ -132,7 +132,7 @@ def mytrain():
             loss.backward()
             optimizer.step()
             
-            if batch_index % 20  == 0 or batch_index == batch_per_epoch-1:
+            if batch_index % 10  == 0 or batch_index == batch_per_epoch-1:
                 if batch_index == 0:
                     t0 = time.time()
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
