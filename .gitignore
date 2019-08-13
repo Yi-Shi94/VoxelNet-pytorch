@@ -5,5 +5,5 @@ __pycache
 .DS_Store
 .ipynb_checkpoints
 *.bin
-voxel_mini_data
+voxelnet
 

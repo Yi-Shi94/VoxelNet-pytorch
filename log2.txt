@@ -1,5 +1,0 @@
-batch_size:2, if_continued:False, if_cuda: True , epoch_num:50, learning_rate:0.001, loss_param_alpha:0.5, loss_param_beta:1,
-----------------------------------------
-Initializing weights...
-/home/screentest/anaconda3/envs/screentest/lib/python3.7/importlib/_bootstrap.py:219: RuntimeWarning: compiletime version 3.5 of module 'box_overlaps' does not match runtime version 3.7
-  return f(*args, **kwds)
