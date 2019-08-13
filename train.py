@@ -123,7 +123,7 @@ def mytrain():
             # zero the parameter gradients
             optimizer.zero_grad()
             # forward
-            t0 = time.time()
+            
             psm, rm = net(voxel_features, voxel_coords)
             print (psm,rm)
             # calculate loss
@@ -132,12 +132,15 @@ def mytrain():
             loss.backward()
             optimizer.step()
             
-            if batch_index % 10  == 0 or batch_index == batch_per_epoch-1:
+            if batch_index % 20  == 0 or batch_index == batch_per_epoch-1:
+                if batch_index = 0:
+                    t0 = time.time()
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
                   (loss.item(), conf_loss.item(), reg_loss.item())
                 print(res)
+                t0 = time.time()
                 #log_file.write(res)
                 
         if epoch % 5 ==0:
