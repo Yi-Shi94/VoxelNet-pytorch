@@ -1,5 +1,6 @@
 *.swp
 __pycache
+*.pth
 .
 ..
 .DS_Store

@@ -77,7 +77,7 @@ if if_cuda:
     
 print("----------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict, setting='train')
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=4, \
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=8, \
                               collate_fn=detection_collate, \
                               shuffle=True, \
                               pin_memory=False)
