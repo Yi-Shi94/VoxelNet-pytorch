@@ -125,7 +125,7 @@ def mytrain():
             # forward
             
             psm, rm = net(voxel_features, voxel_coords)
-            print (psm,rm)
+            print (psm.shape,rm.shape)
             # calculate loss
             conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
             loss = conf_loss + reg_loss
