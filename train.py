@@ -125,13 +125,14 @@ def mytrain():
             # forward
             t0 = time.time()
             psm, rm = net(voxel_features, voxel_coords)
+            print (psm,rm)
             # calculate loss
             conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
             loss = conf_loss + reg_loss
             loss.backward()
             optimizer.step()
             
-            if batch_index % 20  == 0 or batch_index == batch_per_epoch-1:
+            if batch_index % 10  == 0 or batch_index == batch_per_epoch-1:
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
                 res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
@@ -139,7 +140,7 @@ def mytrain():
                 print(res)
                 #log_file.write(res)
                 
-        if epoch % 10 ==0:
+        if epoch % 5 ==0:
             print("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
             torch.save(net.state_dict(), chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
     
