@@ -36,7 +36,7 @@ conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
 if_cuda = True if conf_dict["if_cuda"] == 1 else False
-classes = conf["classes"]
+classes = conf_dict["classes"]
 chk_pth = "/home/ys3237/Voxelnet-pytorch/checkpoints/chk_Car_Van_35.pth"
 
 if if_cuda:
