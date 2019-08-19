@@ -185,7 +185,7 @@ class KITDataset(data.Dataset):
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
 
         else:
-            if self.setting == 'test':
+            if self.setting == 'val':
                 gt_box3d = read_label(label_file_path,calib,self.classes)
                 lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
                 voxel_features, voxel_coords = self.voxelize(lidars)
