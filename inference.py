@@ -36,14 +36,8 @@ conf = f.read()
 conf_dict = yaml.safe_load(conf) 
 
 if_cuda = True if conf_dict["if_cuda"] == 1 else False
-learning_rate = conf_dict["lr"]
-a = conf_dict["alpha"]
-b = conf_dict["beta"]
-classes = '_'.join(conf["classes"])
-epoch_num = conf_dict["epoch"]
-chk_pth = conf_dict["chk_pth_infer"]
-
-print("if_cuda: {}, learning_rate:{}, loss_param_alpha:{}, loss_param_beta:{}, classes:{}".format( if_cuda, learning_rate, a, b, classes))
+classes = conf["classes"]
+chk_pth = "/home/ys3237/Voxelnet-pytorch/checkpoints/chk_Car_Van_35.pth"
 
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -131,8 +125,11 @@ def inference(setting="val"):#test,val
         print(np.shape(bboxes_final))
         
         
-        #log_file = open("./predicts/"+setting+'/'+ids+'.txt')
-        #log_file.close()
+        log_file = open("./predicts/"+setting+'/'+ids+'.txt')
+        for i in bboxes_final:
+            print(','.join(i)+'\n')
+            log_file.write(','.join(i)+'\n')
+        log_file.close()
     
 if __name__ == '__main__':
     mytrain()

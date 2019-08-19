@@ -66,7 +66,7 @@ def box3d_cam_to_velo(box3d, Tr):
     return box3d_corner.astype(np.float32)
 
 def point_cloud_2_birdseye(points,
-                           res=0.4,
+                           res=0.1,
                            side_range=range_y,  
                            fwd_range =range_x, 
                            height_range=range_z, 
