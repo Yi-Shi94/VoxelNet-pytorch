@@ -132,8 +132,8 @@ def inference(setting="val"):#test,val
         log_file.close()
     
 if __name__ == '__main__':
-    mytrain()
-      
+    
+      inference()
     
     
     
