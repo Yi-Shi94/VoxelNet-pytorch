@@ -1,5 +1,26 @@
 import numpy as np
 
+def anchors_center_to_corner(anchors):
+    N = anchors.shape[0]
+    anchor_corner = np.zeros((N, 4, 2))
+    for i in range(N):
+        anchor = anchors[i]
+        translation = anchor[0:3]
+        h, w, l = anchor[3:6]
+        rz = anchor[-1]
+        Box = np.array([
+            [-l / 2, -l / 2, l / 2, l / 2], \
+            [w / 2, -w / 2, -w / 2, w / 2]])
+        # re-create 3D bounding box in velodyne coordinate system
+        rotMat = np.array([
+            [np.cos(rz), -np.sin(rz)],
+            [np.sin(rz), np.cos(rz)]])
+        velo_box = np.dot(rotMat, Box)
+        cornerPosInVelo = velo_box + np.tile(translation[:2], (4, 1)).T
+        anchor_corner[i] = cornerPosInVelo.transpose()
+    return anchor_corner
+
+
 def project_velo_to_cam(lidar, P_intr, Tr, R):
     coord_in_cam0 = np.dot(lidar,Tr)
     coord_in_cam2 = np.dot(coord_in_cam0,R)
@@ -91,7 +112,7 @@ def point_cloud_2_birdseye(points,
     return im
 
 def bbox3d_2_birdeye(points,
-                     res=0.4,
+                     res=0.1,
                      fwd_range =range_x, # back-most to forward-most
                      side_range=range_y,  # left-most to right-most
                      height_range=range_z):  # bottom-most to upper-most

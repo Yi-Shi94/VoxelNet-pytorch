@@ -12,7 +12,8 @@ import numpy as np
 from glob import glob
 
 import cv2
-from utils.utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
+from utils.coord_transform import *
+from utils.utils import box3d_corner_to_center_batch, corner_to_standup_box2d_batch
 from data.data import KITDataset 
 from box_overlaps import bbox_overlaps
 from data_aug import aug_data
@@ -107,9 +108,29 @@ def inference(setting="val"):#test,val
             # zero the parameter gradients
         psm, rm = net(voxel_features, voxel_coords)
         print(psm,rm)
-            # calculate loss
-            #conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
-            #loss = conf_loss + reg_loss
+        
+        rm = rm.permute(0,2,3,1).contiguous()
+        rm = rm.view(rm.size(0),rm.size(1),rm.size(2),-1,7)
+        targets = targets.view(targets.size(0),targets.size(1),targets.size(2),-1,7)
+        pos_equal_one_for_reg = pos_equal_one.unsqueeze(pos_equal_one.dim()).expand(-1,-1,-1,-1,7)
+        
+        rm_pos = rm * pos_equal_one_for_reg #([batch, 200, 176, 2, 7])  
+        rm_pos = rm_pos.view(-1,7).numpy()
+        p_pos = F.sigmoid(psm.permute(0,2,3,1))#([batch, 200, 176, 2])
+        p_pos = p_pos.numpy().ravel()
+        
+        p_index = p_pos.argsort(dim=1)[::-1][:200]
+        p = p_pos[p_index]
+        rm = anchors_center_to_corner(rm_pos[p_index])
+        rm_bev = bbox3d_2_birdeye(rm)
+        bboxes_bev = np.concatenate([rm_bev,p],dim=0)
+       
+        print(rm_bev[:10,:],p[:10,:])
+        print(np.shape(bboxes_bev))
+        bboxes_final = nms(bboxes_bev,0.3)
+        print(np.shape(bboxes_final))
+        
+        
         #log_file = open("./predicts/"+setting+'/'+ids+'.txt')
         #log_file.close()
     
