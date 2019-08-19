@@ -210,7 +210,7 @@ def anchors_center_to_corner(anchors):
 
 def corner_to_standup_box2d_batch(boxes_corner):
     # (N, 4, 2) -> (N, 4) x1, y1, x2, y2
-    assert boxes_corner.ndim == 2
+    assert boxes_corner.ndim == 3
     N = boxes_corner.shape[0]
     standup_boxes2d = np.zeros((N, 4))
     standup_boxes2d[:, 0] = np.min(boxes_corner[:, :, 0], axis=1)
