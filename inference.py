@@ -105,11 +105,8 @@ def inference(setting="val"):#test,val
         
         rm = rm.permute(0,2,3,1).contiguous()
         rm = rm.view(rm.size(0),rm.size(1),rm.size(2),-1,7)
-        targets = targets.view(targets.size(0),targets.size(1),targets.size(2),-1,7)
-        pos_equal_one_for_reg = pos_equal_one.unsqueeze(pos_equal_one.dim()).expand(-1,-1,-1,-1,7)
-        
-        rm_pos = rm * pos_equal_one_for_reg #([batch, 200, 176, 2, 7])  
-        rm_pos = rm_pos.view(-1,7).numpy()
+          #([batch, 200, 176, 2, 7])  
+        rm_pos = rm.view(-1,7).numpy()
         p_pos = F.sigmoid(psm.permute(0,2,3,1))#([batch, 200, 176, 2])
         p_pos = p_pos.numpy().ravel()
         
