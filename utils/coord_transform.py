@@ -43,3 +43,76 @@ def box3d_cam_to_velo(box3d, Tr):
     cornerPosInVelo = velo_box + np.tile(t_lidar, (8, 1)).T
     box3d_corner = cornerPosInVelo.transpose()
     return box3d_corner.astype(np.float32)
+
+def point_cloud_2_birdseye(points,
+                           res=0.4,
+                           side_range=range_y,  
+                           fwd_range =range_x, 
+                           height_range=range_z, 
+                           ):
+  
+    # EXTRACT THE POINTS FOR EACH AXIS
+    x_points = points[:, 0]
+    y_points = points[:, 1]
+    z_points = points[:, 2]
+
+    f_filt = np.logical_and((x_points > fwd_range[0]), (x_points < fwd_range[1]))
+    s_filt = np.logical_and((y_points > side_range[0]), (y_points < side_range[1]))
+    filter = np.logical_and(f_filt, s_filt)
+    indices = np.argwhere(filter).flatten()
+    # KEEPERS
+    x_points = x_points[indices]
+    y_points = y_points[indices]
+    z_points = z_points[indices]
+
+    s0 = np.ones([len(y_points),])*np.abs(side_range[0]-0)
+    f0 = np.ones([len(x_points),])*np.abs(fwd_range[1]-fwd_range[0])
+    x_img = ((-side_range[0]-y_points)/res).astype(np.int32) 
+    y_img = ((fwd_range[1]-fwd_range[0]-x_points)/res).astype(np.int32) 
+    
+    
+    # CLIP HEIGHT VALUES - to between min and max heights
+    pixel_values = np.clip(a=z_points,
+                           a_min=height_range[0],
+                           a_max=height_range[1])
+
+    # RESCALE THE HEIGHT VALUES - to be between the range 0-255
+    pixel_values = scale_to_255(pixel_values,
+                                min=height_range[0],
+                                max=height_range[1])
+
+    # INITIALIZE EMPTY ARRAY - of the dimensions we want
+    x_max = 1 + int((side_range[1] - side_range[0]) / res)
+    y_max = 1 + int((fwd_range[1] - fwd_range[0]) / res)
+    im = np.zeros([y_max, x_max], dtype=np.uint8)
+
+    # FILL PIXEL VALUES IN IMAGE ARRAY
+    im[y_img, x_img] = pixel_values
+    return im
+
+def bbox3d_2_birdeye(points,
+                     res=0.4,
+                     fwd_range =range_x, # back-most to forward-most
+                     side_range=range_y,  # left-most to right-most
+                     height_range=range_z):  # bottom-most to upper-most
+    
+    x_points = points[:, 0]
+    y_points = points[:, 1]
+    z_points = points[:, 2]
+    f_filt = np.logical_and((x_points > fwd_range[0]), (x_points < fwd_range[1]))
+    s_filt = np.logical_and((y_points > side_range[0]), (y_points < side_range[1]))
+    filter = np.logical_and(f_filt, s_filt)
+    indices = np.argwhere(filter).flatten()
+    x_points = x_points[indices]
+    y_points = y_points[indices]
+    z_points = z_points[indices]
+
+    x_img = ((-side_range[0]-y_points)/res).astype(np.int32) 
+    y_img = ((fwd_range[1]-fwd_range[0]-x_points)/res).astype(np.int32) 
+    
+    x_min = min(x_img)
+    x_max = max(x_img)
+    y_min = min(y_img)
+    y_max = max(y_img)
+    return x_min,y_min,x_max,y_max
+

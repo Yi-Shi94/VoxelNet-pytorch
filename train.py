@@ -77,7 +77,7 @@ if if_cuda:
     
 print("----------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict, setting='train')
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=8, \
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=batch_size, num_workers=6, \
                               collate_fn=detection_collate, \
                               shuffle=True, \
                               pin_memory=False)
@@ -125,8 +125,9 @@ def mytrain():
             # forward
             
             psm, rm = net(voxel_features, voxel_coords)
-            #print (psm.shape,rm.shape)
+            print (psm.shape,rm.shape)
             # calculate loss
+            
             conf_loss, reg_loss = criterion(rm, psm, pos_equal_one, neg_equal_one, targets)
             loss = conf_loss + reg_loss
             loss.backward()

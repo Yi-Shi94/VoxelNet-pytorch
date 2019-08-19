@@ -53,11 +53,13 @@ class KITDataset(data.Dataset):
         cx, cy = np.meshgrid(x, y)
         cx = np.tile(cx[..., np.newaxis], 2)
         cy = np.tile(cy[..., np.newaxis], 2)
-        cz = np.ones_like(cx) * (-1.0)
-        w = np.ones_like(cx) * 1.6
-        l = np.ones_like(cx) * 3.9
-        h = np.ones_like(cx) * 1.56
-        r = np.ones_like(cx)
+        
+        shape = np.shape(cx)
+        cz = np.ones(shape) * (-1.0)
+        w = np.ones(shape) * 1.6
+        l = np.ones(shape) * 3.9
+        h = np.ones(shape) * 1.56
+        r = np.ones(shape)
         r[..., 0] = 0
         r[..., 1] = np.pi/2
         self.anchors = np.stack([cx, cy, cz, h, w, l, r], axis=-1)
@@ -83,30 +85,33 @@ class KITDataset(data.Dataset):
         gt_xyzhwlr = box3d_corner_to_center_batch(gt_box3d)
 
         anchors_corner = anchors_center_to_corner(self.anchors)
-
         anchors_standup_2d = corner_to_standup_box2d_batch(anchors_corner)
-        # BOTTLENECK
         gt_standup_2d = corner_to_standup_box2d_batch(gt_box3d)
 
         iou = bbox_overlaps(
             np.ascontiguousarray(anchors_standup_2d).astype(np.float32),
             np.ascontiguousarray(gt_standup_2d).astype(np.float32),
         )
-
-        id_highest = np.argmax(iou.T, axis=1)  # the maximum anchor's ID
-        id_highest_gt = np.arange(iou.T.shape[0])
-        mask = iou.T[id_highest_gt, id_highest] > 0
-        id_highest, id_highest_gt = id_highest[mask], id_highest_gt[mask]
-        # find anchor iou > cfg.XXX_POS_IOU
-        id_pos, id_pos_gt = np.where(iou > self.pos_threshold)
-        # find anchor iou < cfg.XXX_NEG_IOU
-        id_neg = np.where(np.sum(iou < self.neg_threshold,
+        #iou (an, gt) overlap between anchors and gt_boxes
+        #iou.T (gt,an) argmax axis=1, row-wise max, for each gt_box, index of max iou-scored anchor box
+        id_highest = np.argmax(iou.T, axis=1)  # 1*gt
+        #iou.T.shape[0] = num(gt) 
+        id_highest_gt = np.arange(iou.T.shape[0]) #1*gt
+        # for gt_boxes, mask stands for filter of box with highest anchor which has iou>0  
+        mask = iou.T[id_highest_gt, id_highest] > 0 #less than 1*gt
+        # get rid of those gt with 0 iou with each anchor
+        id_highest, id_highest_gt = id_highest[mask], id_highest_gt[mask] #less than 1*gt,less than 1*gt
+        # in table iou,every anchor,gt pair with iou > thres_p
+        id_pos, id_pos_gt = np.where(iou > self.pos_threshold) #less than 1*an*gt, less than 1*gt*an
+        # in table iou,every anchor with iou <thres_n with all gt_boxes
+        id_neg = np.where(np.sum(iou < self.neg_threshold,  #less than 1*an
                                  axis=1) == iou.shape[1])[0]
 
         id_pos = np.concatenate([id_pos, id_highest])
         id_pos_gt = np.concatenate([id_pos_gt, id_highest_gt])
-        # TODO: uniquify the array in a more scientific way
+       
         id_pos, index = np.unique(id_pos, return_index=True)
+        # the index of id_pos of anchor appears first time
         id_pos_gt = id_pos_gt[index]
         id_neg.sort()
         # cal the target and set the equal one
@@ -167,11 +172,10 @@ class KITDataset(data.Dataset):
         lidars = read_velodyne_points(lidar_file_path)
         lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         image = cv2.imread(image_file_path)  
-        if self.setting !='test':
+        if self.setting =='train':
             gt_box3d = read_label(label_file_path,calib,self.classes)        
             # online data augmentation
-            if self.setting =='train':
-                lidars, gt_box3d = aug_data(lidars, gt_box3d)
+            lidars, gt_box3d = aug_data(lidars, gt_box3d)
             # specify a range
             lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             # voxelize
@@ -181,11 +185,15 @@ class KITDataset(data.Dataset):
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
 
         else:
-            #lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
-            voxel_features, voxel_coords = self.voxelize(lidars)
-            #pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            return voxel_features, voxel_coords, image, calib
-        
+            if self.setting == 'test':
+                gt_box3d = read_label(label_file_path,calib,self.classes)
+                lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
+                voxel_features, voxel_coords = self.voxelize(lidars)
+                pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
+                return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
+            else:
+                voxel_features, voxel_coords = self.voxelize(lidars)
+                return voxel_features, voxel_coords
 
     def __len__(self):
         return len(self.file_paths)

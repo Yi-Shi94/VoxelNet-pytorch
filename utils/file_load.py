@@ -16,12 +16,11 @@ def read_img(file_path):
 def read_velodyne_points(file_path):
     return np.fromfile(file_path, dtype=np.float32).reshape(-1, 4)
 
-def prepare_velodyne_points(pts3d_raw,range_x = None,range_y = None, range_z = None):
+def prepare_velodyne_points(pts3d_raw, range_x = None, range_y = None, range_z = None):
     '''Replaces the reflectance value by 1, and tranposes the array, so
         points can be directly multiplied by the camera projection matrix'''
     pts3d = pts3d_raw
     indices = pts3d[:, 3] >= 0
-    
     #print("range",range_x,range_y,range_z,len(indices),len(pts3d))
     if range_x!=None:
         indices_x = np.logical_and((pts3d[:,0]>=min(range_x)),(pts3d[:,0]<=max(range_x)))
@@ -33,7 +32,7 @@ def prepare_velodyne_points(pts3d_raw,range_x = None,range_y = None, range_z = N
         indices_z = np.logical_and((pts3d[:,2]>=min(range_z)),(pts3d[:,2]<=max(range_z)))
         indices = np.logical_and(indices,indices_z)
     pts3d = pts3d[indices ,:]   
-    #pts3d[:,3] = 1 
+    pts3d[:,3] = 1 
     return pts3d, indices
 
 def read_cal(file_path):

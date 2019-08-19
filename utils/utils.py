@@ -187,6 +187,7 @@ def box3d_cam_to_velo(box3d, Tr):
     return box3d_corner.astype(np.float32)
 
 def anchors_center_to_corner(anchors):
+    
     N = anchors.shape[0]
     anchor_corner = np.zeros((N, 4, 2))
     for i in range(N):
@@ -203,13 +204,13 @@ def anchors_center_to_corner(anchors):
             [np.sin(rz), np.cos(rz)]])
         velo_box = np.dot(rotMat, Box)
         cornerPosInVelo = velo_box + np.tile(translation[:2], (4, 1)).T
-        box2d = cornerPosInVelo.transpose()
-        anchor_corner[i] = box2d
+        anchor_corner[i] = cornerPosInVelo.transpose()
     return anchor_corner
 
 
 def corner_to_standup_box2d_batch(boxes_corner):
     # (N, 4, 2) -> (N, 4) x1, y1, x2, y2
+    assert boxes_corner.ndim == 2
     N = boxes_corner.shape[0]
     standup_boxes2d = np.zeros((N, 4))
     standup_boxes2d[:, 0] = np.min(boxes_corner[:, :, 0], axis=1)
@@ -222,11 +223,10 @@ def box3d_corner_to_center_batch(box3d_corner):
     # (N, 8, 3) -> (N, 7)
     assert box3d_corner.ndim == 3
     batch_size = box3d_corner.shape[0]
-
+    #mid
     xyz = np.mean(box3d_corner[:, :4, :], axis=1)
-
+    # -down_z+up_z
     h = abs(np.mean(box3d_corner[:, 4:, 2] - box3d_corner[:, :4, 2], axis=1, keepdims=True))
-
     w = (np.sqrt(np.sum((box3d_corner[:, 0, [0, 1]] - box3d_corner[:, 1, [0, 1]]) ** 2, axis=1, keepdims=True)) +
          np.sqrt(np.sum((box3d_corner[:, 2, [0, 1]] - box3d_corner[:, 3, [0, 1]]) ** 2, axis=1, keepdims=True)) +
          np.sqrt(np.sum((box3d_corner[:, 4, [0, 1]] - box3d_corner[:, 5, [0, 1]]) ** 2, axis=1, keepdims=True)) +
