@@ -15,9 +15,11 @@ class VoxelLoss(nn.Module):
         print("psm",psm.shape)
         print("p_pos",p_pos.shape)
         cls_pos_loss = -pos_equal_one * torch.log(p_pos + 1e-6)
+        print("cls_pos_loss_map",cls_pos_loss.shape)
         cls_pos_loss = cls_pos_loss.sum() / (pos_equal_one.sum() + 1e-6)
         print("cls_pos_loss",cls_pos_loss.data)
         cls_neg_loss = -neg_equal_one * torch.log(1 - p_pos + 1e-6)
+        print("cls_neg_loss_map",cls_neg_loss.shape)
         cls_neg_loss = cls_neg_loss.sum() / (neg_equal_one.sum() + 1e-6)
         print("cls_neg_loss",cls_neg_loss.data)
         conf_loss = self.alpha * cls_pos_loss + self.beta * cls_neg_loss
