@@ -1,4 +1,18 @@
+from __future__ import division
 import numpy as np
+import math
+import yaml
+
+yamlPath = "configure.yaml"
+f = open(yamlPath, 'r', encoding='utf-8')
+conf = f.read()
+conf_dict = yaml.safe_load(conf) 
+range_x=conf_dict['range_x']
+range_y=conf_dict['range_y']
+range_z=conf_dict['range_z']
+vox_depth = conf_dict['vox_d']
+vox_width = conf_dict['vox_w']
+vox_height = conf_dict['vox_h']
 
 def anchors_center_to_corner(anchors):
     N = anchors.shape[0]
@@ -110,3 +124,30 @@ def point_cloud_2_birdseye(points,
     # FILL PIXEL VALUES IN IMAGE ARRAY
     im[y_img, x_img] = pixel_values
     return im
+
+def bbox3d_2_birdeye(points,
+                     res=0.1,
+                     fwd_range =range_x, # back-most to forward-most
+                     side_range=range_y,  # left-most to right-most
+                     height_range=range_z):  # bottom-most to upper-most
+    
+    x_points = points[:, 0]
+    y_points = points[:, 1]
+    z_points = points[:, 2]
+    f_filt = np.logical_and((x_points > fwd_range[0]), (x_points < fwd_range[1]))
+    s_filt = np.logical_and((y_points > side_range[0]), (y_points < side_range[1]))
+    filter = np.logical_and(f_filt, s_filt)
+    indices = np.argwhere(filter).flatten()
+    x_points = x_points[indices]
+    y_points = y_points[indices]
+    z_points = z_points[indices]
+
+    x_img = ((-side_range[0]-y_points)/res).astype(np.int32) 
+    y_img = ((fwd_range[1]-fwd_range[0]-x_points)/res).astype(np.int32) 
+    
+    x_min = min(x_img)
+    x_max = max(x_img)
+    y_min = min(y_img)
+    y_max = max(y_img)
+    return x_min,y_min,x_max,y_max
+
