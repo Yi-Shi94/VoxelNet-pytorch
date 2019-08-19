@@ -37,7 +37,7 @@ conf_dict = yaml.safe_load(conf)
 
 if_cuda = True if conf_dict["if_cuda"] == 1 else False
 classes = conf_dict["classes"]
-chk_pth = "/home/ys3237/Voxelnet-pytorch/checkpoints/chk_Car_Van_35.pth"
+chk_pth = "/home/screentest/ys3237/VoxelNet-pytorch/checkpoints/chk_Car_Van_35.pth"
 
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
