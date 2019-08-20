@@ -45,7 +45,7 @@ if if_cuda:
 print("-"*20)
 print("if_cuda:",if_cuda)
 kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=2, num_workers=4,pin_memory=True)
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=4,pin_memory=True)
 
     
 def inference(setting="val"):#test,val
