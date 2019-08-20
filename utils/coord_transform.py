@@ -144,7 +144,8 @@ def bbox3d_2_birdeye(points,
 
     x_img = ((-side_range[0]-y_points)/res).astype(np.int32) 
     y_img = ((fwd_range[1]-fwd_range[0]-x_points)/res).astype(np.int32) 
-    
+    print(x_img,np.shape(x_img))
+    print(y_img,np.shape(y_img))
     x_min = min(x_img)
     x_max = max(x_img)
     y_min = min(y_img)

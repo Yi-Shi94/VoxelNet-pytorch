@@ -121,12 +121,12 @@ def inference(setting="val"):#test,val
         print(np.shape(rm_bev))
         bboxes_bev = np.concatenate([rm_bev,p],dim=0)
        
-        print(bboxes_bev[:10,:],np.shape(bboxes_bev))
+        print(bboxes_bev[:10,:])
         print(np.shape(bboxes_bev))
         bboxes_final = nms(bboxes_bev,0.3)
         print(np.shape(bboxes_final))
         
-        
+        print("oi",idx)
         log_file = open("./predicts/"+setting+'/'+str(ids)+'.txt')
         for i in bboxes_final:
             print(','.join(i)+'\n')
