@@ -44,8 +44,6 @@ if if_cuda:
 
 print("-"*20)
 print("if_cuda:",if_cuda)
-kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=4,collate_fn=detection_collate,pin_memory=True)
 
 def detection_collate(batch):
     voxel_features = []
@@ -76,6 +74,9 @@ def detection_collate(batch):
 
 
 def inference(setting="val"):#test,val
+    kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
+    kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=4,collate_fn=detection_collate,pin_memory=True)
+
     print('Loading pre-trained weights...')
     #chk = glob(chk_pth+'/*')[-1]
     net = VoxelNet()
@@ -85,7 +86,7 @@ def inference(setting="val"):#test,val
     net.eval()
     for batch_index, contents in enumerate(tqdm(kit_data_loader)):
         voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
-            # wrapper to variable
+         # wrapper to variable
         
         voxel_features = voxel_features.view(np.shape(voxel_features)[1:])
         #print("dick", np.shape(voxel_features),np.shape(voxel_coords))
