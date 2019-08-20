@@ -187,10 +187,10 @@ class KITDataset(data.Dataset):
         elif self.setting == 'val':
             gt_box3d = read_label(label_file_path,calib,self.classes)
             lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
-            lidars, gt_box3d = aug_data(lidars, gt_box3d)
+            #lidars, gt_box3d = aug_data(lidars, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(lidars)
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib,self.file_paths[index]
+            return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, gt_box3d, image, calib,self.file_paths[index]
         else:
             voxel_features, voxel_coords = self.voxelize(lidars)
             return voxel_features, voxel_coords

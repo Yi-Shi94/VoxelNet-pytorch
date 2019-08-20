@@ -86,9 +86,9 @@ def inference(setting="val"):#test,val
     net.load_state_dict(torch.load(chk_pth))
     net.eval()
     for batch_index, contents in enumerate(tqdm(kit_data_loader)):
-        voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
+        voxel_features, voxel_coords, pos_equal_one, neg_equal_one, gt_box3d, images, calibs, ids = contents
          # wrapper to variable
-       
+        
         #print(np.shape(voxel_features),np.shape(voxel_coords))
         voxel_features = Variable(torch.FloatTensor(voxel_features))
         if if_cuda:
@@ -126,6 +126,7 @@ def inference(setting="val"):#test,val
         bboxes_final = bboxes_bev[nms(bboxes_bev,0.3)]
         print(np.shape(bboxes_final))
         print(bboxes_final)
+        print(gt_box3d)
         print("oi",ids[0].split['/'][-1].split['.'][0])
         filr_name = ids[0].split['/'][-1].split['.'][0]
         log_file = open("/home/screentest/ys3237/VoxelNet-pytorch/predicts/"+setting+'_'+filr_name+'txt','w')
