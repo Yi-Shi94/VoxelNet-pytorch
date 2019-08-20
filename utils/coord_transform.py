@@ -130,7 +130,8 @@ def bbox3d_2_birdeye(points,
                      fwd_range =range_x, # back-most to forward-most
                      side_range=range_y,  # left-most to right-most
                      height_range=range_z):  # bottom-most to upper-most
-    
+    if len(points)==0:
+        return np.array([])
     x_points = points[:, 0]
     y_points = points[:, 1]
     z_points = points[:, 2]
