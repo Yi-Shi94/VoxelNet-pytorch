@@ -115,7 +115,7 @@ def inference(setting="val"):#test,val
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
         #rm = corner_to_standup_box2d_batch(rm)
         rm_bev = bbox3d_2_birdeye(rm)
-        gt_box3d = bbox3d_2_birdeye(gt_box3d)
+        
         
         
         bboxes_bev = np.concatenate((rm_bev,p),axis=1)
@@ -124,6 +124,8 @@ def inference(setting="val"):#test,val
         print(np.shape(bboxes_final))
         print(bboxes_final)
         print(gt_box3d)
+        gt_box3d = bbox3d_2_birdeye(gt_box3d)
+        
         
         file_name = ids[0].split('/')[-1].split('.')[0]
         log_file = open("/home/screentest/ys3237/VoxelNet-pytorch/predicts/"+setting+'_'+file_name+'.txt','w+')
