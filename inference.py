@@ -59,7 +59,7 @@ def inference(setting="val"):#test,val
     for batch_index, contents in enumerate(tqdm(kit_data_loader)):
         voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
-        
+        print("dicks:",np.shape(voxel_features),np.shape(voxel_coords))
         voxel_features = Variable(torch.FloatTensor(voxel_features))
         if if_cuda:
             voxel_features = voxel_features.cuda()

@@ -76,6 +76,7 @@ class FCN(nn.Module):
 
     def forward(self,x):
         # KK is the stacked k across batch
+        print(x.shape)
         kk, t, _ = x.shape
         x = self.linear(x.view(kk*t,-1))
         x = F.relu(self.bn(x))
@@ -92,6 +93,7 @@ class VFE(nn.Module):
 
     def forward(self, x, mask):
         # point-wise feauture
+        print(x.shape)
         pwf = self.fcn(x)
         #locally aggregated feature
         laf = torch.max(pwf,1)[0].unsqueeze(1).repeat(1,pt_thres_per_vox,1)
