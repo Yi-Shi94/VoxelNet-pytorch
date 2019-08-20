@@ -105,25 +105,22 @@ def inference(setting="val"):#test,val
         psm, rm = net(voxel_features, voxel_coords)
         
         rm = rm.permute(0,2,3,1).contiguous()
-        rm = rm.view(rm.size(0),rm.size(1),rm.size(2),-1,7)
-          #([batch, 200, 176, 2, 7])  
+        rm = rm.view(rm.size(0),rm.size(1),rm.size(2),-1,7)#([batch, 200, 176, 2, 7])
         rm_pos = rm.view(-1,7).detach().cpu().numpy()
-        print(rm_pos)
         p_pos = F.sigmoid(psm.permute(0,2,3,1))#([batch, 200, 176, 2])
         p_pos = p_pos.view(-1,1).detach().cpu().numpy()
-        print(p_pos)
-        p_index = p_pos.argsort(axis=0)[-200:][::-1]
-        print(p_pos[p_index])
+        
+        p_index = p_pos.argsort(axis=0)[::-1]
         p = p_pos[p_index].squeeze(-1)
-        print(rm_pos[p_index].squeeze(1),np.shape(rm_pos[p_index].squeeze(1)))
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
-        print(rm,np.shape(rm))
         rm_bev = corner_to_standup_box2d_batch(rm)
-        print(np.shape(rm_bev),np.shape(p))
+        rm_bev = bbox3d_2_birdeye(rm_bev)
+        gt_box3d = bbox3d_2_birdeye(gt_box3d)
+        
+        
         bboxes_bev = np.concatenate((rm_bev,p),axis=1)
-        print(bboxes_bev[:10,:])
-        print(np.shape(bboxes_bev))
-        bboxes_final = bboxes_bev[nms(bboxes_bev,0.3)]
+        
+        bboxes_final = bboxes_bev[nms(bboxes_bev,0.4)]
         print(np.shape(bboxes_final))
         print(bboxes_final)
         print(gt_box3d)
@@ -132,7 +129,6 @@ def inference(setting="val"):#test,val
         log_file = open("/home/screentest/ys3237/VoxelNet-pytorch/predicts/"+setting+'_'+file_name+'.txt','w+')
         for i in bboxes_final:
             items = list(map(lambda x:str(x),list(i)))
-            print(items)
             
             log_file.write(','.join(items)+'\n')
         log_file.close()
