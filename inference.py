@@ -127,7 +127,7 @@ def inference(setting="val"):#test,val
         print(np.shape(bboxes_final))
         print(bboxes_final)
         print(gt_box3d)
-        print("oi",ids[0].split['/'][-1].split['.'][0])
+        print("oi",ids[0])
         filr_name = ids[0].split['/'][-1].split['.'][0]
         log_file = open("/home/screentest/ys3237/VoxelNet-pytorch/predicts/"+setting+'_'+filr_name+'txt','w')
         for i in bboxes_final:
