@@ -114,7 +114,7 @@ def inference(setting="val"):#test,val
         p_index = p_pos.argsort(axis=0)[-200:][::-1]
         print(p_pos[p_index])
         p = p_pos[p_index]
-        print(rm_pos[p_index])
+        print(np.shape(rm_pos[p_index]))
         rm = anchors_center_to_corner(rm_pos[p_index])
         rm_bev = bbox3d_2_birdeye(rm)
         bboxes_bev = np.concatenate([rm_bev,p],dim=0)
