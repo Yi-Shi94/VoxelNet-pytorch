@@ -44,9 +44,7 @@ if if_cuda:
 
 print("------------------------------------------------------")
 kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=1, \
-                           
-                              pin_memory=True)
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=1,pin_memory=True)
 
 net = VoxelNet()
 if if_cuda:
@@ -95,7 +93,7 @@ def inference(setting="val"):#test,val
         print(np.shape(bboxes_final))
         
         
-        log_file = open("./predicts/"+setting+'/'+ids+'.txt')
+        log_file = open("./predicts/"+setting+'/'+str(ids)+'.txt')
         for i in bboxes_final:
             print(','.join(i)+'\n')
             log_file.write(','.join(i)+'\n')
