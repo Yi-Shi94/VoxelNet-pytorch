@@ -12,8 +12,9 @@ import numpy as np
 from glob import glob
 import torch.nn.functional as F
 import cv2
-from utils.coord_transform import *
 from utils.utils import *
+from utils.coord_transform import *
+
 from data.data import KITDataset 
 from box_overlaps import bbox_overlaps
 from data_aug import aug_data
@@ -117,7 +118,7 @@ def inference(setting="val"):#test,val
         print(rm_pos[p_index].squeeze(1),np.shape(rm_pos[p_index].squeeze(1)))
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
         print(rm,np.shape(rm))
-        rm_bev = np.transpose(corner_to_standup_box2d_batch(rm))
+        rm_bev = corner_to_standup_box2d_batch(rm)
         print(np.shape(rm_bev),np.shape(p))
         bboxes_bev = np.concatenate((rm_bev,p),axis=1)
         print(bboxes_bev[:10,:])
