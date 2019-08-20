@@ -126,8 +126,9 @@ def inference(setting="val"):#test,val
         bboxes_final = bboxes_bev[nms(bboxes_bev,0.3)]
         print(np.shape(bboxes_final))
         print(bboxes_final)
-        print("oi",ids)
-        log_file = open("./predicts/"+setting+'/'+ids[0][:-3]+'txt')
+        print("oi",ids[0].split['/'][-1].split['.'][0])
+        filr_name = ids[0].split['/'][-1].split['.'][0]
+        log_file = open("/home/screentest/ys3237/VoxelNet-pytorch/predicts/"+setting+'_'+filr_name+'txt','w')
         for i in bboxes_final:
             print(','.join(i)+'\n')
             log_file.write(','.join(i)+'\n')
