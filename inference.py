@@ -131,7 +131,8 @@ def inference(setting="val"):#test,val
         file_name = ids[0].split('/')[-1].split('.')[0]
         log_file = open("/home/screentest/ys3237/VoxelNet-pytorch/predicts/"+setting+'_'+file_name+'.txt','w+')
         for i in bboxes_final:
-            
+            items = list(map(lambda x:str(i),list(i))
+            print(items)
             print(','.join(list(i))+'\n')
             log_file.write(','.join(i)+'\n')
         log_file.close()
