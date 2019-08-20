@@ -59,21 +59,19 @@ def inference(setting="val"):#test,val
     for batch_index, contents in enumerate(tqdm(kit_data_loader)):
         voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
+        
+        voxel_features = Variable(torch.FloatTensor(voxel_features))
         if if_cuda:
-            voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
+            voxel_features = voxel_features.cuda()
             #pos_equal_one = Variable(torch.cuda.FloatTensor(pos_equal_one))
             #neg_equal_one = Variable(torch.cuda.FloatTensor(neg_equal_one))
             #targets = Variable(torch.cuda.FloatTensor(targets))
-        else:
-            voxel_features = Variable(torch.FloatTensor(voxel_features))
             #pos_equal_one = Variable(torch.FloatTensor(pos_equal_one))
             #neg_equal_one = Variable(torch.FloatTensor(neg_equal_one))
             #targets = Variable(torch.FloatTensor(targets))
 
             # zero the parameter gradients
-            
-            
-           
+ 
         psm, rm = net(voxel_features, voxel_coords)
         print(psm,rm)
         
