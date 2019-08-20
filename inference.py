@@ -119,7 +119,7 @@ def inference(setting="val"):#test,val
         print(rm,np.shape(rm))
         rm_bev = bbox3d_2_birdeye(rm)
         print(np.shape(rm_bev))
-        bboxes_bev = np.concatenate([rm_bev,p],axis=0)
+        bboxes_bev = np.concatenate((rm_bev,p),axis=1)
        
         print(bboxes_bev[:10,:])
         print(np.shape(bboxes_bev))
