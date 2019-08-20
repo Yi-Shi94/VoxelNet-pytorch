@@ -115,11 +115,13 @@ def inference(setting="val"):#test,val
         print(p_pos[p_index])
         p = p_pos[p_index]
         print(np.shape(rm_pos[p_index]))
-        rm = anchors_center_to_corner(rm_pos[p_index])
+        rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
+        print(np.shape(rm))
         rm_bev = bbox3d_2_birdeye(rm)
+        print(np.shape(rm_bev))
         bboxes_bev = np.concatenate([rm_bev,p],dim=0)
        
-        print(rm_bev[:10,:],p[:10,:])
+        print(bboxes_bev[:10,:],np.shape(bboxes_bev))
         print(np.shape(bboxes_bev))
         bboxes_final = nms(bboxes_bev,0.3)
         print(np.shape(bboxes_final))
