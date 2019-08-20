@@ -113,8 +113,8 @@ def inference(setting="val"):#test,val
         p_index = p_pos.argsort(axis=0)[::-1]
         p = p_pos[p_index].squeeze(-1)
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
-        rm_bev = corner_to_standup_box2d_batch(rm)
-        rm_bev = bbox3d_2_birdeye(rm_bev)
+        #rm = corner_to_standup_box2d_batch(rm)
+        rm_bev = bbox3d_2_birdeye(rm)
         gt_box3d = bbox3d_2_birdeye(gt_box3d)
         
         
