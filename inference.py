@@ -14,7 +14,7 @@ import torch.nn.functional as F
 import cv2
 from utils.utils import *
 from utils.coord_transform import *
-
+from utils.nms import nms
 from data.data import KITDataset 
 from box_overlaps import bbox_overlaps
 from data_aug import aug_data
