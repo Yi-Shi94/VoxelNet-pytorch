@@ -102,16 +102,17 @@ def inference(setting="val"):#test,val
             # zero the parameter gradients
  
         psm, rm = net(voxel_features, voxel_coords)
-        print(psm,rm)
+        #print(psm,rm)
         
         rm = rm.permute(0,2,3,1).contiguous()
         rm = rm.view(rm.size(0),rm.size(1),rm.size(2),-1,7)
           #([batch, 200, 176, 2, 7])  
-        rm_pos = rm.view(-1,7).detach().numpy()
+        rm_pos = rm.view(-1,7).detach().cpu().numpy()
         p_pos = F.sigmoid(psm.permute(0,2,3,1))#([batch, 200, 176, 2])
-        p_pos = p_pos.view(-1,1).detach().numpy()
+        p_pos = p_pos.view(-1,1).detach().cpu().numpy()
         
         p_index = p_pos.argsort(dim=1)[::-1][:200]
+        print(p_index)
         p = p_pos[p_index]
         rm = anchors_center_to_corner(rm_pos[p_index])
         rm_bev = bbox3d_2_birdeye(rm)
