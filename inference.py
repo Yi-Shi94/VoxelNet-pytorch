@@ -117,7 +117,7 @@ def inference(setting="val"):#test,val
         print(rm_pos[p_index].squeeze(1),np.shape(rm_pos[p_index].squeeze(1)))
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
         print(rm,np.shape(rm))
-        rm_bev = np.transpose(corner_to_standup_box2d_batch(rm))
+        rm_bev = corner_to_standup_box2d_batch(rm).transpos(1,0)
         print(np.shape(rm_bev),np.shape(p))
         bboxes_bev = np.concatenate((rm_bev,p),axis=1)
         print(bboxes_bev[:10,:])
