@@ -42,20 +42,20 @@ chk_pth = "/home/screentest/ys3237/VoxelNet-pytorch/checkpoints/chk_Car_Van_35.p
 if if_cuda:
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-print("------------------------------------------------------")
+print("-"*20)
+print("if_cuda:",if_cuda)
 kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=1,pin_memory=True)
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=4,pin_memory=True)
 
-net = VoxelNet()
-if if_cuda:
-    net.cuda()
-
-print('Loading pre-trained weights...')
-    #chk = glob(chk_pth+'/*')[-1]
-net.load_state_dict(torch.load(chk_pth))
-net.eval()
     
 def inference(setting="val"):#test,val
+    print('Loading pre-trained weights...')
+    #chk = glob(chk_pth+'/*')[-1]
+    net = VoxelNet()
+    if if_cuda:
+        net.cuda()
+    net.load_state_dict(torch.load(chk_pth))
+    net.eval()
     for batch_index, contents in enumerate(tqdm(kit_data_loader)):
         voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
@@ -71,6 +71,9 @@ def inference(setting="val"):#test,val
             #targets = Variable(torch.FloatTensor(targets))
 
             # zero the parameter gradients
+            
+            
+           
         psm, rm = net(voxel_features, voxel_coords)
         print(psm,rm)
         
