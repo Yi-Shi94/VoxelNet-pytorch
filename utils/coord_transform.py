@@ -150,5 +150,5 @@ def bbox3d_2_birdeye(points,
     x_max = x_img.max(axis=1)
     y_min = y_img.min(axis=1)
     y_max = y_img.max(axis=1)
-    return x_min,y_min,x_max,y_max
+    return np.array(zip(x_min,y_min,x_max,y_max))
 
