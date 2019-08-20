@@ -45,7 +45,7 @@ if if_cuda:
 print("-"*20)
 print("if_cuda:",if_cuda)
 kit_dataset= KITDataset(conf_dict=conf_dict,setting="val")#test,val
-kit_data_loader = data.DataLoader(kit_dataset, batch_size=1, num_workers=4,pin_memory=True)
+kit_data_loader = data.DataLoader(kit_dataset, batch_size=2, num_workers=4,pin_memory=True)
 
     
 def inference(setting="val"):#test,val
@@ -59,7 +59,8 @@ def inference(setting="val"):#test,val
     for batch_index, contents in enumerate(tqdm(kit_data_loader)):
         voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
             # wrapper to variable
-        print("dicks:",np.shape(voxel_features),np.shape(voxel_coords))
+        print("dick", np.shape(voxel_features))
+        voxel_features.view(np.shape(voxel_features)[1:])
         voxel_features = Variable(torch.FloatTensor(voxel_features))
         if if_cuda:
             voxel_features = voxel_features.cuda()
