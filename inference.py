@@ -113,7 +113,7 @@ def inference(setting="val"):#test,val
         print(p_pos)
         p_index = p_pos.argsort(axis=0)[-200:][::-1]
         print(p_pos[p_index])
-        p = p_pos[p_index]
+        p = p_pos[p_index].squeeze(-1)
         print(rm_pos[p_index].squeeze(1),np.shape(rm_pos[p_index].squeeze(1)))
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
         print(rm,np.shape(rm))
