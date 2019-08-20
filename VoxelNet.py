@@ -76,7 +76,6 @@ class FCN(nn.Module):
 
     def forward(self,x):
         # KK is the stacked k across batch
-        print(x.shape)
         kk, t, _ = x.shape
         x = self.linear(x.view(kk*t,-1))
         x = F.relu(self.bn(x))
@@ -193,6 +192,5 @@ class VoxelNet(nn.Module):
         # convolutional middle network
         cml_out = self.cml(vwfs)
         # region proposal network
-        # merge the depth and feature dim into one, output probability score map and regression map
         psm,rm = self.rpn(cml_out.view(batch_size, -1, H, W))
         return psm, rm
