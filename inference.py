@@ -127,7 +127,7 @@ def inference(setting="val"):#test,val
         print(np.shape(bboxes_final))
         print(bboxes_final)
         print("oi",ids)
-        log_file = open("./predicts/"+setting+'/'+str(ids)+'.txt')
+        log_file = open("./predicts/"+setting+'/'+ids[0][:-3]+'txt')
         for i in bboxes_final:
             print(','.join(i)+'\n')
             log_file.write(','.join(i)+'\n')
