@@ -61,7 +61,7 @@ def inference(setting="val"):#test,val
             # wrapper to variable
         
         voxel_features = voxel_features.view(np.shape(voxel_features)[1:])
-        print("dick", np.shape(voxel_features))
+        print("dick", np.shape(voxel_features),np.shape(voxel_coords)
         voxel_features = Variable(torch.FloatTensor(voxel_features))
         if if_cuda:
             voxel_features = voxel_features.cuda()
