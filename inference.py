@@ -133,8 +133,8 @@ def inference(setting="val"):#test,val
         for i in bboxes_final:
             items = list(map(lambda x:str(x),list(i)))
             print(items)
-            print(','.join(list(i))+'\n')
-            log_file.write(','.join(i)+'\n')
+            
+            log_file.write(','.join(items)+'\n')
         log_file.close()
     
 if __name__ == '__main__':
