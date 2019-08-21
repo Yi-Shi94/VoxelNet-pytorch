@@ -115,8 +115,7 @@ def inference(setting="val"):#test,val
         rm = anchors_center_to_corner(rm_pos[p_index].squeeze(1))
         #rm = corner_to_standup_box2d_batch(rm)
         rm_bev = bbox3d_2_birdeye(rm)
-        print(np.shape(rm_bev),np.shape(p))
-        
+        #print(np.shape(rm_bev),np.shape(p))
         
         bboxes_bev = np.concatenate((rm_bev,p),axis=1)
         
