@@ -92,7 +92,7 @@ class VFE(nn.Module):
 
     def forward(self, x, mask):
         # point-wise feauture
-        print(x.shape)
+        #print(x.shape)
         pwf = self.fcn(x)
         #locally aggregated feature
         laf = torch.max(pwf,1)[0].unsqueeze(1).repeat(1,pt_thres_per_vox,1)
