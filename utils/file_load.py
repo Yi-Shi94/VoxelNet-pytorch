@@ -41,12 +41,16 @@ def read_cal(file_path):
         
         lines = f.readlines()[:-1]
         items = list(map(lambda x:(x.split()[0][:-1],eval_lst(x.split()[1:])),lines))
+        
         for i in range(0,4):
             info_dict[items[i][0]]= np.array(items[i][1]).reshape(4,3).astype('float32')
         Tr_velo_to_cam = np.array(items[5][1]).reshape(3,4)
         Tr_velo_to_cam = np.concatenate([Tr_velo_to_cam, np.array([0,0,0,1]).reshape(1,4)],0).astype('float32')
         R_cam_to_rect = np.eye(4)
         R_cam_to_rect[:3,:3] = np.array(items[4][1]).reshape(3,3).astype('float32')
+        P = np.array(items[2][1]).reshape(3,4)
+        P = np.concatenate((P,np.array([[0,0,0,0]])),0).astype('float32')
+        info_dict['P'] = P
         info_dict['R_cam_to_rect'] = R_cam_to_rect
         info_dict['Tr_velo_to_cam'] = Tr_velo_to_cam
         
@@ -64,11 +68,25 @@ def read_label_for_vis(file_path):
         bbox_3d = coords_3d[coords_keep_indices,:]
         return bbox_2d,bbox_3d
 
+def read_label_inference(file_path,classes):  
+    with open(file_path,'r') as f:
+        lines = f.readlines()
+        num_obj = len(lines)
+        gt_boxes3d = []
+        for j in range(num_obj):
+            obj = lines[j].strip().split(' ')
+            obj_class = obj[0].strip()
+            if obj_class not in classes:
+                continue 
+            gt_boxes3d.append([float(i) for i in obj[-7:]])
+        gt_boxes3d = np.array(gt_boxes3d).reshape(-1,7)
+        return gt_boxes3d
+    
+    
 def read_label(file_path,Tr,classes):
     with open(file_path,'r') as f:
         lines = f.readlines()
         gt_boxes3d_corner = []
-
         num_obj = len(lines)
 
         for j in range(num_obj):
@@ -79,14 +97,14 @@ def read_label(file_path,Tr,classes):
             box3d_corner = box3d_cam_to_velo(obj[8:], Tr)
 
             gt_boxes3d_corner.append(box3d_corner)
-        gt_boxes3d_corner = np.array(gt_boxes3d_corner).reshape(-1,8,3)
+        gt_boxes3d_corner = np.array(gt_boxes3d_corner).reshape(-1,8,3).astype('float')
         return gt_boxes3d_corner
     
 def generate_file_path(file_index,root_path,mode="training"):
     parent_pth = root_path
     file_name = "%06d"%(file_index)
     img = os.path.join(parent_pth,  mode,'image_2',  file_name+'.png')
-    lid = os.path.join(parent_pth,  mode,'crop',     file_name+'.bin')
+    lid = os.path.join(parent_pth,  mode,'velodyne', file_name+'.bin')
     cal = os.path.join(parent_pth,  mode,'calib',    file_name+'.txt')
     label = os.path.join(parent_pth,mode,'label_2',  file_name+'.txt')
     return [img,lid,cal,label]

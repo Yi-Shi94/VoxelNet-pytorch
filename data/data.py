@@ -168,11 +168,12 @@ class KITDataset(data.Dataset):
                            
     def __getitem__(self, index):
         image_file_path, lidar_file_path, calib_file_path, label_file_path = generate_file_path(index,self.data_root_path)
-        calib = read_cal(calib_file_path)['Tr_velo_to_cam']
+        
         lidars = read_velodyne_points(lidar_file_path)
-        lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
+        #lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
         image = cv2.imread(image_file_path)  
         if self.setting =='train':
+            calib = read_cal(calib_file_path)['Tr_velo_to_cam']
             gt_box3d = read_label(label_file_path,calib,self.classes)        
             # online data augmentation
             lidars, gt_box3d = aug_data(lidars, gt_box3d)
@@ -184,13 +185,15 @@ class KITDataset(data.Dataset):
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
 
-        elif self.setting == 'val':
-            gt_box3d = read_label(label_file_path,calib,self.classes)
-            lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
+        elif self.setting == 'val' or self.setting == 'val2':
+            calib = read_cal(calib_file_path)
+            gt_box3d = read_label(label_file_path,calib['Tr_velo_to_cam'],self.classes)
+            lidars,gt_box3d = get_filtered_lidar(lidars, gt_box3d)
+            gt_box3d = box3d_corner_to_center_batch(gt_box3d)
             #lidars, gt_box3d = aug_data(lidars, gt_box3d)
             voxel_features, voxel_coords = self.voxelize(lidars)
             #pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
-            return voxel_features, voxel_coords, None , None, gt_box3d, image, calib, self.file_paths[index]
+            return voxel_features, voxel_coords, gt_box3d, image, lidars, calib, self.file_paths[index]
         else:
             voxel_features, voxel_coords = self.voxelize(lidars)
             return voxel_features, voxel_coords

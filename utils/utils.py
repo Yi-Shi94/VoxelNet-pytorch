@@ -38,8 +38,7 @@ h = np.ones_like(cx) * 1.56
 r = np.ones_like(cx)
 r[..., 0] = 0
 r[..., 1] = np.pi/2
-anchors = np.stack([cx, cy, cz, h, w, l, r], axis=-1)
-anchors = anchors.reshape(-1,7)
+anchors = np.stack([cx, cy, cz, h, w, l, r], axis=-1).reshape(-1,7)
         
 def get_filtered_lidar(lidar, boxes3d=None):
 
@@ -247,6 +246,54 @@ def box3d_corner_to_center_batch(box3d_corner):
                         box3d_corner[:, 0, 1] - box3d_corner[:, 1, 1]))[:, np.newaxis] / 4
 
     return np.concatenate([xyz, h, w, l, theta], axis=1).reshape(batch_size, 7)
+
+
+
+
+def cal_iou3d(box1, box2, T_VELO_2_CAM=None, R_RECT_0=None):
+    # Input:
+    #   box1/2: x, y, z, h, w, l, r
+    # Output:
+    #   iou
+    buf1 = np.zeros((cfg.INPUT_HEIGHT, cfg.INPUT_WIDTH, 3))
+    buf2 = np.zeros((cfg.INPUT_HEIGHT, cfg.INPUT_WIDTH, 3))
+    tmp = center_to_corner_box2d(np.array([box1[[0,1,4,5,6]], box2[[0,1,4,5,6]]]), coordinate='lidar', T_VELO_2_CAM=T_VELO_2_CAM, R_RECT_0=R_RECT_0)
+    box1_corner = batch_lidar_to_bird_view(tmp[0]).astype(np.int32)
+    box2_corner = batch_lidar_to_bird_view(tmp[1]).astype(np.int32)
+    buf1 = cv2.fillConvexPoly(buf1, box1_corner, color=(1,1,1))[..., 0]
+    buf2 = cv2.fillConvexPoly(buf2, box2_corner, color=(1,1,1))[..., 0]
+    share = np.sum((buf1 + buf2) == 2)
+    area1 = np.sum(buf1)
+    area2 = np.sum(buf2)
+    
+    z1, h1, z2, h2 = box1[2], box1[3], box2[2], box2[3]
+    z_intersect = cal_z_intersect(z1, h1, z2, h2)
+
+    return share * z_intersect / (area1 * h1 + area2 * h2 - share * z_intersect)
+
+
+def cal_box3d_iou(boxes3d, gt_boxes3d, cal_3d=0, T_VELO_2_CAM=None, R_RECT_0=None):
+    # Inputs:
+    #   boxes3d: (N1, 7) x,y,z,h,w,l,r
+    #   gt_boxed3d: (N2, 7) x,y,z,h,w,l,r
+    # Outputs:
+    #   iou: (N1, N2)
+    N1 = len(boxes3d)
+    N2 = len(gt_boxes3d)
+    output = np.zeros((N1, N2), dtype=np.float32)
+
+    for idx in range(N1):
+        for idy in range(N2):
+            if cal_3d:
+                output[idx, idy] = float(
+                    cal_iou3d(boxes3d[idx], gt_boxes3d[idy]), T_VELO_2_CAM, R_RECT_0)
+            else:
+                output[idx, idy] = float(
+                    cal_iou2d(boxes3d[idx, [0, 1, 4, 5, 6]], gt_boxes3d[idy, [0, 1, 4, 5, 6]], T_VELO_2_CAM, R_RECT_0))
+
+    return output
+
+
 
 '''
 def get_anchor3d(anchors):

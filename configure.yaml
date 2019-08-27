@@ -1,5 +1,5 @@
 if_cuda: 1
-batch_size: 1
+batch_size: 2
 if_continued: 0
 lr: 0.01
 alpha: 1.5
@@ -24,12 +24,46 @@ vox_d: 0.4
 vox_w: 0.2
 vox_h: 0.2
 
+pt_thres_per_vox: 35
 anchors_per_vox: 2
 nms_threshold: 0.1
 score_threshold: 0.96
 iou_pos_threshold: 0.6
 iou_neg_threshold: 0.45
-pt_thres_per_vox: 35
+
+ANCHOR_L : 3.9
+ANCHOR_W : 1.6
+ANCHOR_H : 1.56
+
+#if  'Car':
+#    car anchor
+#    ANCHOR_L = 3.9
+#    ANCHOR_W = 1.6
+#    ANCHOR_H = 1.56
+#    ANCHOR_Z = -1.0 - cfg.ANCHOR_H/2
+#    iou_pos_threshold = 0.6
+#    iou_neg_threshold = 0.45
+
+#if  'Pedestrian':
+#     pedestrian anchor
+#     ANCHOR_L = 0.8
+#     ANCHOR_W = 0.6
+#     ANCHOR_H = 1.73
+#     ANCHOR_Z = -0.6 - cfg.ANCHOR_H/2
+#     iou_pos_threshold = 0.5
+#     iou_neg_threshold = 0.35
+
+#if  'Cyclist':
+#     cyclist anchor
+#     ANCHOR_L = 1.76
+#     ANCHOR_W = 0.6
+#     ANCHOR_H = 1.73
+#     ANCHOR_Z = -0.6 - cfg.ANCHOR_H/2
+#     iou_pos_threshold = 0.5
+#     iou_neg_threshold = 0.35
+
+# for rpn nms
+#  RPN_NMS_POST_TOPK = 20
 
 classes:
     - "Car"

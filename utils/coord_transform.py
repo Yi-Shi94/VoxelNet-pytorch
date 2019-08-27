@@ -46,6 +46,13 @@ def project_cam2velo(cam, T):
     lidar_loc = lidar_loc_[:3]
     return lidar_loc.reshape(1, 3)
 
+def camera_to_lidar(x, y, z, Tr, R):
+    p = np.array([x, y, z, 1])
+    p = np.matmul(np.linalg.inv(R), p)
+    p = np.matmul(np.linalg.inv(Tr), p)
+    p = p[0:3]
+    return tuple(p)
+
 def box3d_cam_to_velo(box3d, Tr):
     def ry_to_rz(ry):
         angle = -ry - np.pi / 2
@@ -125,6 +132,7 @@ def point_cloud_2_birdseye(points,
     im[y_img, x_img] = pixel_values
     return im
 
+
 def bbox3d_2_birdeye(points,
                      res=0.1,
                      fwd_range =range_x, # back-most to forward-most
@@ -154,3 +162,23 @@ def bbox3d_2_birdeye(points,
     y_max = y_img.max(axis=1)
     return np.array(list(zip(x_min,y_min,x_max,y_max)))
 
+def delta_to_boxes3d(deltas, anchors, coordinate='lidar'):
+    # Input:
+    #   deltas: (N, w, l, 14)
+    #   feature_map_shape: (w, l)
+    #   anchors: (w, l, 2, 7)
+
+    # Ouput:
+    #   boxes3d: (N, w*l*2, 7)
+    anchors_reshaped = anchors.reshape(-1, 7)
+    deltas = deltas.reshape(deltas.shape[0], -1, 7)
+    anchors_d = np.sqrt(anchors_reshaped[:, 4]**2 + anchors_reshaped[:, 5]**2)
+    boxes3d = np.zeros_like(deltas)
+    boxes3d[..., [0, 1]] = deltas[..., [0, 1]] * \
+        anchors_d[:, np.newaxis] + anchors_reshaped[..., [0, 1]]
+    boxes3d[..., [2]] = deltas[..., [2]] * \
+        cfg.ANCHOR_H + anchors_reshaped[..., [2]]
+    boxes3d[..., [3, 4, 5]] = np.exp(
+        deltas[..., [3, 4, 5]]) * anchors_reshaped[..., [3, 4, 5]]
+    boxes3d[..., 6] = deltas[..., 6] + anchors_reshaped[..., 6]
+    return boxes3d

@@ -13,6 +13,7 @@ from glob import glob
 
 import cv2
 from utils.utils import box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
+from utils.plot import *
 from data.data import KITDataset 
 from box_overlaps import bbox_overlaps
 from data_aug import aug_data
@@ -62,7 +63,7 @@ def detection_collate(batch):
            np.array(targets), images, calibs, ids
 
 if_continued = True if conf_dict['if_continued'] == 1 else False
-if_cuda = True if conf_dict["if_cuda"] == 1 else False
+if_cuda = True if conf_dict["if_cuda"] == 1 and torch.cuda.is_available() else False
 batch_size = conf_dict['batch_size']
 learning_rate = conf_dict["lr"]
 a = conf_dict["alpha"]
@@ -87,6 +88,7 @@ net = VoxelNet()
 if if_cuda:
     net.cuda()
 net.train()
+
 if if_continued:
     print('Loading pre-trained weights...')
     chk = glob(chk_pth+'/*')[-1]
@@ -102,14 +104,14 @@ def mytrain():
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=int(epoch_num/5), gamma=0.1)
     criterion = VoxelLoss(alpha=a, beta=b)
     batch_per_epoch = len(kit_data_loader)
+    
     # training process
     for epoch in range(epoch_num):
         scheduler.step()
         #for batch_index, contents in enumerate(tqdm(kit_data_loader)):
         for batch_index, contents in enumerate(kit_data_loader):
             voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, images, calibs, ids = contents
-            print("dicks",np.shape(voxel_features),np.shape(voxel_coords))
-	    # wrapper to variable
+         
             if if_cuda:
                 voxel_features = Variable(torch.cuda.FloatTensor(voxel_features))
                 pos_equal_one = Variable(torch.cuda.FloatTensor(pos_equal_one))
@@ -139,14 +141,14 @@ def mytrain():
                     t0 = time.time()
                 res = ('Epoch %d, batch: %d / %d, Timer Taken: %.4f sec.\n' % \
                   (epoch,batch_index,batch_per_epoch,(time.time() - t0)))
-                res += 'Total Loss: %.4f || Conf Loss: %.4f || Loc Loss: %.4f\n' % \
+                res += 'Total Loss: %.4f <> Confidence Loss: %.4f <> BBox Loss: %.4f\n' % \
                   (loss.item(), conf_loss.item(), reg_loss.item())
                 print(res)
                 t0 = time.time()
                 #log_file.write(res)
                 
         if epoch % 5 ==0:
-            print("Saving pth: ",chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
+            print("Saving pth: ", chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
             torch.save(net.state_dict(), chk_pth+'/chk_'+classes+'_'+str(epoch)+'.pth')
     
     

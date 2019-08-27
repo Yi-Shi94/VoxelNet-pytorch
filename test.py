@@ -8,7 +8,7 @@ from glob import glob
 import torch
 import yaml
 import utils
-import tdqm
+import tqdm
 from utils.mAp import *
 
 def detection_collate(batch):
