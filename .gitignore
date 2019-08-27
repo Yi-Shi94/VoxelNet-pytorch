@@ -7,4 +7,5 @@ __pycache
 .ipynb_checkpoints
 *.bin
 voxelnet
-
+.txt
+.jpg
