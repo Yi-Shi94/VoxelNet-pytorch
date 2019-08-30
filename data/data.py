@@ -83,7 +83,6 @@ class KITDataset(data.Dataset):
         targets = np.zeros((*self.feature_map_shape, 14))
 
         gt_xyzhwlr = box3d_corner_to_center_batch(gt_box3d)
-
         anchors_corner = anchors_center_to_corner(self.anchors)
         anchors_standup_2d = corner_to_standup_box2d_batch(anchors_corner)
         gt_standup_2d = corner_to_standup_box2d_batch(gt_box3d)

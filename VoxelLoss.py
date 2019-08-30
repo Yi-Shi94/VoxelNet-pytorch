@@ -12,7 +12,6 @@ class VoxelLoss(nn.Module):
     def forward(self, rm, psm, pos_equal_one, neg_equal_one, targets):
         #regression map,possibility score map: h/2,w/2,14,
         p_pos = F.sigmoid(psm.permute(0,2,3,1))
-        #print("psm",psm.shape)
         #print("p_pos",p_pos.shape)
         cls_pos_loss = -pos_equal_one * torch.log(p_pos + 1e-6)
         #print("cls_pos_loss_map", cls_pos_loss.shape)
@@ -27,7 +26,6 @@ class VoxelLoss(nn.Module):
         
         rm = rm.permute(0,2,3,1).contiguous()
         rm = rm.view(rm.size(0),rm.size(1),rm.size(2),-1,7)
-        #print("rm",rm.shape)
         targets = targets.view(targets.size(0),targets.size(1),targets.size(2),-1,7)
         #print("peo",pos_equal_one.shape)
         pos_equal_one_for_reg = pos_equal_one.unsqueeze(pos_equal_one.dim()).expand(-1,-1,-1,-1,7)

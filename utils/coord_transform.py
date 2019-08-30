@@ -132,7 +132,6 @@ def point_cloud_2_birdseye(points,
     im[y_img, x_img] = pixel_values
     return im
 
-
 def bbox3d_2_birdeye(points,
                      res=0.1,
                      fwd_range =range_x, # back-most to forward-most
@@ -182,3 +181,4 @@ def delta_to_boxes3d(deltas, anchors, coordinate='lidar'):
         deltas[..., [3, 4, 5]]) * anchors_reshaped[..., [3, 4, 5]]
     boxes3d[..., 6] = deltas[..., 6] + anchors_reshaped[..., 6]
     return boxes3d
+
