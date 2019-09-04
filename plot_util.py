@@ -380,31 +380,28 @@ def lidar_box3d_to_camera_box(boxes3d, cal_projection=False, P2 = None, T_VELO_2
     return projections if cal_projection else boxes2d
 
 
-def lidar_to_bird_view_img(lidar, factor=1):
+def lidar_to_bird_view_img(lidar, res_factor=4):
     # Input:
     #   lidar: (N', 4)
     # Output:
     #   birdview: (w, l, 3)
-    birdview = np.zeros(
-        (H * factor, W * factor, 1))
+    birdview = np.zeros((H * res_factor, W * res_factor, 1))
     for point in lidar:
         x, y = point[0:2]
         if min(range_x) < x < max(range_x) and min(range_y) < y < max(range_y):
-            x, y = int((x - min(range_x)) / vox_width *
-                       factor), int((y - min(range_y)) / vox_height * factor)
+            x = int((x - min(range_x)) / vox_width * res_factor)
+            y = int((y - min(range_y)) / vox_height * res_factor)
             birdview[y, x] += 1
     birdview = birdview - np.min(birdview)
     divisor = np.max(birdview) - np.min(birdview)
     # TODO: adjust this factor
-    birdview = np.clip((birdview / divisor * 255) *
-                       5 * factor, a_min=0, a_max=255)
+    birdview = np.clip(5* (birdview / divisor * 255)  * res_factor, a_min=0, a_max=255)
     birdview = np.tile(birdview, 3).astype(np.uint8)
-
     return birdview
 
 
 def draw_lidar_box3d_on_image(img, boxes3d, scores, gt_boxes3d=np.array([]),
-                              color=(0, 255, 255), gt_color=(255, 0, 255), thickness=1, P2 = None, T_VELO_2_CAM=None, R_RECT_0=None):
+                              color=(0, 255, 0), gt_color=(255, 0, 255), thickness=2, P2 = None, T_VELO_2_CAM=None, R_RECT_0=None):
     # Input:
     #   img: (h, w, 3)
     #   boxes3d (N, 7) [x, y, z, h, w, l, r]
@@ -448,7 +445,7 @@ def draw_lidar_box3d_on_image(img, boxes3d, scores, gt_boxes3d=np.array([]),
 
 
 def draw_lidar_box3d_on_birdview(birdview, boxes3d, scores, gt_boxes3d=np.array([]),
-                                 color=(0, 255, 255), gt_color=(255, 0, 255), thickness=1, factor=1, P2 = None, T_VELO_2_CAM=None, R_RECT_0=None):
+                                 color=(0, 0, 255), gt_color=(255, 40, 100), thickness=2, factor=4, P2 = None, T_VELO_2_CAM=None, R_RECT_0=None):
     # Input:
     #   birdview: (h, w, 3)
     #   boxes3d (N, 7) [x, y, z, h, w, l, r]
@@ -474,7 +471,9 @@ def draw_lidar_box3d_on_birdview(birdview, boxes3d, scores, gt_boxes3d=np.array(
                  gt_color, thickness, cv2.LINE_AA)
 
     # draw detections
-    for box in corner_boxes3d:
+    for box_index in range(len(corner_boxes3d)):
+        box = corner_boxes3d[box_index]
+        score = scores[box_index]
         x0, y0 = lidar_to_bird_view(*box[0, 0:2], factor=factor)
         x1, y1 = lidar_to_bird_view(*box[1, 0:2], factor=factor)
         x2, y2 = lidar_to_bird_view(*box[2, 0:2], factor=factor)
@@ -488,6 +487,7 @@ def draw_lidar_box3d_on_birdview(birdview, boxes3d, scores, gt_boxes3d=np.array(
                  color, thickness, cv2.LINE_AA)
         cv2.line(img, (int(x3), int(y3)), (int(x0), int(y0)),
                  color, thickness, cv2.LINE_AA)
+        cv2.putText(img,str(score),(int(x0),int(y0)),cv2.FONT_HERSHEY_COMPLEX,0.5,(0,0,255),1)
 
     return cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2RGB)
 
@@ -551,7 +551,7 @@ def delta_to_boxes3d(deltas, anchors, coordinate='lidar'):
 
     # Ouput:
     #   boxes3d: (N, w*l*2, 7)
-    deltas = deltas.detach().numpy()
+    #deltas = deltas.detach().numpy()
     anchors_reshaped = anchors.reshape(-1, 7)
     deltas = deltas.reshape(deltas.shape[0], -1, 7)
     anchors_d = np.sqrt(anchors_reshaped[:, 4]**2 + anchors_reshaped[:, 5]**2)
@@ -563,145 +563,3 @@ def delta_to_boxes3d(deltas, anchors, coordinate='lidar'):
 
     return boxes3d
 
-
-def point_transform(points, tx, ty, tz, rx=0, ry=0, rz=0):
-    # Input:
-    #   points: (N, 3)
-    #   rx/y/z: in radians
-    # Output:
-    #   points: (N, 3)
-    N = points.shape[0]
-    points = np.hstack([points, np.ones((N, 1))])
-
-    mat1 = np.eye(4)
-    mat1[3, 0:3] = tx, ty, tz
-    points = np.matmul(points, mat1)
-
-    if rx != 0:
-        mat = np.zeros((4, 4))
-        mat[0, 0] = 1
-        mat[3, 3] = 1
-        mat[1, 1] = np.cos(rx)
-        mat[1, 2] = -np.sin(rx)
-        mat[2, 1] = np.sin(rx)
-        mat[2, 2] = np.cos(rx)
-        points = np.matmul(points, mat)
-
-    if ry != 0:
-        mat = np.zeros((4, 4))
-        mat[1, 1] = 1
-        mat[3, 3] = 1
-        mat[0, 0] = np.cos(ry)
-        mat[0, 2] = np.sin(ry)
-        mat[2, 0] = -np.sin(ry)
-        mat[2, 2] = np.cos(ry)
-        points = np.matmul(points, mat)
-
-    if rz != 0:
-        mat = np.zeros((4, 4))
-        mat[2, 2] = 1
-        mat[3, 3] = 1
-        mat[0, 0] = np.cos(rz)
-        mat[0, 1] = -np.sin(rz)
-        mat[1, 0] = np.sin(rz)
-        mat[1, 1] = np.cos(rz)
-        points = np.matmul(points, mat)
-
-    return points[:, 0:3]
-
-
-def box_transform(boxes, tx, ty, tz, r=0, coordinate='lidar'):
-    # Input:
-    #   boxes: (N, 7) x y z h w l rz/y
-    # Output:
-    #   boxes: (N, 7) x y z h w l rz/y
-    boxes_corner = center_to_corner_box3d(
-        boxes, coordinate=coordinate)  # (N, 8, 3)
-    for idx in range(len(boxes_corner)):
-        if coordinate == 'lidar':
-            boxes_corner[idx] = point_transform(
-                boxes_corner[idx], tx, ty, tz, rz=r)
-        else:
-            boxes_corner[idx] = point_transform(
-                boxes_corner[idx], tx, ty, tz, ry=r)
-
-    return corner_to_center_box3d(boxes_corner, coordinate=coordinate)
-
-
-def cal_iou2d(box1, box2, T_VELO_2_CAM=None, R_RECT_0=None):
-    # Input: 
-    #   box1/2: x, y, w, l, r
-    # Output :
-    #   iou
-    buf1 = np.zeros((H, W, 3))
-    buf2 = np.zeros((H, W, 3))
-    tmp = center_to_corner_box2d(np.array([box1, box2]), coordinate='lidar', T_VELO_2_CAM=T_VELO_2_CAM, R_RECT_0=R_RECT_0)
-    box1_corner = batch_lidar_to_bird_view(tmp[0]).astype(np.int32)
-    box2_corner = batch_lidar_to_bird_view(tmp[1]).astype(np.int32)
-    buf1 = cv2.fillConvexPoly(buf1, box1_corner, color=(1,1,1))[..., 0]
-    buf2 = cv2.fillConvexPoly(buf2, box2_corner, color=(1,1,1))[..., 0]
-    indiv = np.sum(np.absolute(buf1-buf2))
-    share = np.sum((buf1 + buf2) == 2)
-    if indiv == 0:
-        return 0.0 # when target is out of bound
-    return share / (indiv + share)
-
-def cal_z_intersect(cz1, h1, cz2, h2):
-    b1z1, b1z2 = cz1 - h1 / 2, cz1 + h1 / 2
-    b2z1, b2z2 = cz2 - h2 / 2, cz2 + h2 / 2
-    if b1z1 > b2z2 or b2z1 > b1z2:
-        return 0
-    elif b2z1 <= b1z1 <= b2z2:
-        if b1z2 <= b2z2:
-            return h1 / h2
-        else:
-            return (b2z2 - b1z1) / (b1z2 - b2z1)
-    elif b1z1 < b2z1 < b1z2:
-        if b2z2 <= b1z2:
-            return h2 / h1
-        else:
-            return (b1z2 - b2z1) / (b2z2 - b1z1)
-
-
-def cal_iou3d(box1, box2, T_VELO_2_CAM=None, R_RECT_0=None):
-    # Input:
-    #   box1/2: x, y, z, h, w, l, r
-    # Output:
-    #   iou
-    buf1 = np.zeros((H, W, 3))
-    buf2 = np.zeros((H, W, 3))
-    tmp = center_to_corner_box2d(np.array([box1[[0,1,4,5,6]], box2[[0,1,4,5,6]]]), coordinate='lidar', T_VELO_2_CAM=T_VELO_2_CAM, R_RECT_0=R_RECT_0)
-    box1_corner = batch_lidar_to_bird_view(tmp[0]).astype(np.int32)
-    box2_corner = batch_lidar_to_bird_view(tmp[1]).astype(np.int32)
-    buf1 = cv2.fillConvexPoly(buf1, box1_corner, color=(1,1,1))[..., 0]
-    buf2 = cv2.fillConvexPoly(buf2, box2_corner, color=(1,1,1))[..., 0]
-    share = np.sum((buf1 + buf2) == 2)
-    area1 = np.sum(buf1)
-    area2 = np.sum(buf2)
-    
-    z1, h1, z2, h2 = box1[2], box1[3], box2[2], box2[3]
-    z_intersect = cal_z_intersect(z1, h1, z2, h2)
-
-    return share * z_intersect / (area1 * h1 + area2 * h2 - share * z_intersect)
-
-
-def cal_box3d_iou(boxes3d, gt_boxes3d, cal_3d=0, T_VELO_2_CAM=None, R_RECT_0=None):
-    # Inputs:
-    #   boxes3d: (N1, 7) x,y,z,h,w,l,r
-    #   gt_boxed3d: (N2, 7) x,y,z,h,w,l,r
-    # Outputs:
-    #   iou: (N1, N2)
-    N1 = len(boxes3d)
-    N2 = len(gt_boxes3d)
-    output = np.zeros((N1, N2), dtype=np.float32)
-
-    for idx in range(N1):
-        for idy in range(N2):
-            if cal_3d:
-                output[idx, idy] = float(
-                    cal_iou3d(boxes3d[idx], gt_boxes3d[idy]), T_VELO_2_CAM, R_RECT_0)
-            else:
-                output[idx, idy] = float(
-                    cal_iou2d(boxes3d[idx, [0, 1, 4, 5, 6]], gt_boxes3d[idy, [0, 1, 4, 5, 6]], T_VELO_2_CAM, R_RECT_0))
-
-    return output

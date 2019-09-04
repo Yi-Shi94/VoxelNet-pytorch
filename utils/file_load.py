@@ -1,7 +1,6 @@
 from __future__ import division
 import cv2
 import os
-from utils.nms import nms
 import numpy as np
 from utils.utils import box3d_cam_to_velo
 def cvt(img):
@@ -13,13 +12,8 @@ def eval_lst(lst):
 def read_img(file_path):
     return cvt(cv2.imread(file_path))
 
-def read_velodyne_points(file_path):
-    return np.fromfile(file_path, dtype=np.float32).reshape(-1, 4)
-
-def prepare_velodyne_points(pts3d_raw, range_x = None, range_y = None, range_z = None):
-    '''Replaces the reflectance value by 1, and tranposes the array, so
-        points can be directly multiplied by the camera projection matrix'''
-    pts3d = pts3d_raw
+def read_velodyne_points(file_path,range_x = None, range_y = None, range_z = None):
+    pts3d = np.fromfile(file_path, dtype=np.float32).reshape(-1, 4)
     indices = pts3d[:, 3] >= 0
     #print("range",range_x,range_y,range_z,len(indices),len(pts3d))
     if range_x!=None:
@@ -56,17 +50,6 @@ def read_cal(file_path):
         
         return info_dict
     
-def read_label_for_vis(file_path):
-    with open(file_path,mode='r') as f:
-        lines = f.readlines()
-        lines = np.array(list(map(lambda x:x.split(),lines)))
-        #print (bbox_2d)
-        coords_2d = np.concatenate([lines[:,:1],lines[:,4:8],lines[:,-1:]],1)
-        coords_keep_indices = nms(coords_2d[:,1:].astype('float32'),0.5)
-        bbox_2d = coords_2d[coords_keep_indices,:]
-        coords_3d = np.concatenate([lines[:,:1],lines[:,8:-1],lines[:,-1:]],1)
-        bbox_3d = coords_3d[coords_keep_indices,:]
-        return bbox_2d,bbox_3d
 
 def read_label_inference(file_path,classes):  
     with open(file_path,'r') as f:
@@ -88,7 +71,6 @@ def read_label(file_path,Tr,classes):
         lines = f.readlines()
         gt_boxes3d_corner = []
         num_obj = len(lines)
-
         for j in range(num_obj):
             obj = lines[j].strip().split(' ')
             obj_class = obj[0].strip()
@@ -102,7 +84,7 @@ def read_label(file_path,Tr,classes):
     
 def generate_file_path(file_index,root_path,mode="training"):
     parent_pth = root_path
-    file_name = "%06d"%(file_index)
+    file_name = file_index
     img = os.path.join(parent_pth,  mode,'image_2',  file_name+'.png')
     lid = os.path.join(parent_pth,  mode,'velodyne', file_name+'.bin')
     cal = os.path.join(parent_pth,  mode,'calib',    file_name+'.txt')

@@ -1,11 +1,12 @@
 *.swp
 __pycache
-*.pth
+.pth
 .
 ..
 .DS_Store
 .ipynb_checkpoints
-*.bin
-voxelnet
+.bin
 .txt
 .jpg
+.png
+.so

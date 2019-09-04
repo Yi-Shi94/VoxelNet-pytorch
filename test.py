@@ -128,7 +128,7 @@ def test(mode="testing"):
         num_classes = len(self.classes)
         
         for boxes3d, scores in zip(ret_box3d, ret_score):
-            ret_box3d_score.append(np.concatenate([np.tile(classes, len(boxes3d))[:, np.newaxis],
+            ret_box3d_score.append(np.concatenate([np.tile(num_classes, len(boxes3d))[:, np.newaxis],
                                                    boxes3d, scores[:, np.newaxis]], axis=-1))
         
         for result in ret_box3d_score:

@@ -3,7 +3,6 @@ import numpy as np
 import math
 import cv2
 from box_overlaps import *
-from data_aug import aug_data
 import yaml
 
 yamlPath = "configure.yaml"
@@ -105,25 +104,6 @@ def lidar_to_bev(lidar):
         # top_image = np.dstack((top_image, top_image, top_image)).astype(np.uint8)
 
     return top, density_image
-
-def project_velo2rgb(velo,calib):
-    T=np.zeros([4,4],dtype=np.float32)
-    T[:3,:]=calib['Tr_velo2cam']
-    T[3,3]=1
-    R=np.zeros([4,4],dtype=np.float32)
-    R[:3,:3]=calib['R0']
-    R[3,3]=1
-    num=len(velo)
-    projections = np.zeros((num,8,2),  dtype=np.int32)
-    for i in range(len(velo)):
-        box3d=np.ones([8,4],dtype=np.float32)
-        box3d[:,:3]=velo[i]
-        M=np.dot(calib['P2'],R)
-        M=np.dot(M,T)
-        box2d=np.dot(M,box3d.T)
-        box2d=box2d[:2,:].T/box2d[2,:].reshape(8,1)
-        projections[i] = box2d
-    return projections
 
 def _quantize_coords(x, y):
     xx = H - int((y - range_y[0]) / vox_height)
@@ -245,86 +225,3 @@ def box3d_corner_to_center_batch(box3d_corner):
                         box3d_corner[:, 0, 1] - box3d_corner[:, 1, 1]))[:, np.newaxis] / 4
 
     return np.concatenate([xyz, h, w, l, theta], axis=1).reshape(batch_size, 7)
-
-def scale_to_255(a, min, max, dtype=np.uint8):
-    return (((a - min) / float(max - min)) * 255).astype(dtype)
-
-def point_cloud_2_birdseye(points,
-                           res=0.05,
-                           side_range=range_y,  
-                           fwd_range =range_x, 
-                           height_range=range_z, 
-                           ):
-  
-    # EXTRACT THE POINTS FOR EACH AXIS
-    x_points = points[:, 0]
-    y_points = points[:, 1]
-    z_points = points[:, 2]
-
-    f_filt = np.logical_and((x_points > fwd_range[0]), (x_points < fwd_range[1]))
-    s_filt = np.logical_and((y_points > side_range[0]), (y_points < side_range[1]))
-    filter = np.logical_and(f_filt, s_filt)
-    indices = np.argwhere(filter).flatten()
-    # KEEPERS
-    x_points = x_points[indices]
-    y_points = y_points[indices]
-    z_points = z_points[indices]
-
-    s0 = np.ones([len(y_points),])*np.abs(side_range[0]-0)
-    f0 = np.ones([len(x_points),])*np.abs(fwd_range[1]-fwd_range[0])
-    x_img = ((-side_range[0]-y_points)/res).astype(np.int32) 
-    y_img = ((fwd_range[1]-fwd_range[0]-x_points)/res).astype(np.int32) 
-    
-    
-    # CLIP HEIGHT VALUES - to between min and max heights
-    pixel_values = np.clip(a=z_points,
-                           a_min=height_range[0],
-                           a_max=height_range[1])
-
-    # RESCALE THE HEIGHT VALUES - to be between the range 0-255
-    pixel_values = scale_to_255(pixel_values,
-                                min=height_range[0],
-                                max=height_range[1])
-
-    # INITIALIZE EMPTY ARRAY - of the dimensions we want
-    x_max = 1 + int((side_range[1] - side_range[0]) / res)
-    y_max = 1 + int((fwd_range[1] - fwd_range[0]) / res)
-    im = np.zeros([y_max, x_max], dtype=np.uint8)
-
-    # FILL PIXEL VALUES IN IMAGE ARRAY
-    im[y_img, x_img] = pixel_values
-    return im
-
-def bbox3d_2_birdeye(points,
-                     mode = "largest_area",
-                     res=0.05,
-                     fwd_range =range_x, # back-most to forward-most
-                     side_range=range_y,  # left-most to right-most
-                     height_range=range_z):  # bottom-most to upper-most
-    
-    z_points = points[:, 2]
-    if mode != "largest_area":
-        keep_index = np.array(z_points.argsort()[-4:][::-1])
-        points = points[keep_index,:]
-        print(points)
-        
-    x_points = points[:, 0]
-    y_points = points[:, 1]
-    z_points = points[:, 2]
-    f_filt = np.logical_and((x_points > fwd_range[0]), (x_points < fwd_range[1]))
-    s_filt = np.logical_and((y_points > side_range[0]), (y_points < side_range[1]))
-    filter = np.logical_and(f_filt, s_filt)
-    indices = np.argwhere(filter).flatten()
-    x_points = x_points[indices]
-    y_points = y_points[indices]
-    z_points = z_points[indices]
-
-    x_img = ((-side_range[0]-y_points)/res).astype(np.int32) 
-    y_img = ((fwd_range[1]-fwd_range[0]-x_points)/res).astype(np.int32) 
-
-    x_min = min(x_img)
-    x_max = max(x_img)
-    y_min = min(y_img)
-    y_max = max(y_img)
-    return x_min,y_min,x_max,y_max
-

@@ -8,7 +8,7 @@ import sys
 from utils.file_load import *
 from utils.utils import get_filtered_lidar,box3d_corner_to_center_batch, anchors_center_to_corner, corner_to_standup_box2d_batch
 from box_overlaps import bbox_overlaps
-from data_aug import aug_data
+from data.aug import aug
 
 import torch.utils.data as data
 import numpy as np
@@ -17,8 +17,9 @@ import cv2
 import yaml
 import math
 
+
 class KITDataset(data.Dataset):
-    def __init__(self, conf_dict, root_path='/home/screentest/dataset/voxelnet',setting='train'):
+    def __init__(self, conf_dict, root_path='/root/data/syd/voxelnet',setting='training'):
         
         self.data_root_path = root_path
         self.setting = setting
@@ -26,6 +27,7 @@ class KITDataset(data.Dataset):
         if self.setting!='test':
             #self.record_path = os.path.join(root_path,setting+'.txt')
             self.record_path = os.path.join(self.data_root_path,self.setting+'.txt')
+            
             with open(self.record_path) as f:
                 lines = f.readlines()                            
                 self.file_paths = list(map(lambda x:x.strip('\n'),lines))
@@ -77,7 +79,7 @@ class KITDataset(data.Dataset):
         #   targets (w, l, 14)
         # attention: cal IoU on birdview
 
-        anchors_d = np.sqrt(self.anchors[:, 4] ** 2 + self.anchors[:, 5] ** 2)
+        anchors_d = np.sqrt(self.anchors[:, 4] * self.anchors[:, 4] + self.anchors[:, 5] *self.anchors[:, 5])
         pos_equal_one = np.zeros((*self.feature_map_shape, 2))
         neg_equal_one = np.zeros((*self.feature_map_shape, 2))
         targets = np.zeros((*self.feature_map_shape, 14))
@@ -117,32 +119,22 @@ class KITDataset(data.Dataset):
         index_x, index_y, index_z = np.unravel_index(
             id_pos, (*self.feature_map_shape, self.anchors_per_vox))
         pos_equal_one[index_x, index_y, index_z] = 1
-        # ATTENTION: index_z should be np.array
-
-        targets[index_x, index_y, np.array(index_z) * 7] = \
-            (gt_xyzhwlr[id_pos_gt, 0] - self.anchors[id_pos, 0]) / anchors_d[id_pos]
-        targets[index_x, index_y, np.array(index_z) * 7 + 1] = \
-            (gt_xyzhwlr[id_pos_gt, 1] - self.anchors[id_pos, 1]) / anchors_d[id_pos]
-        targets[index_x, index_y, np.array(index_z) * 7 + 2] = \
-            (gt_xyzhwlr[id_pos_gt, 2] - self.anchors[id_pos, 2]) / self.anchors[id_pos, 3]
-        targets[index_x, index_y, np.array(index_z) * 7 + 3] = np.log(
-            gt_xyzhwlr[id_pos_gt, 3] / self.anchors[id_pos, 3])
-        targets[index_x, index_y, np.array(index_z) * 7 + 4] = np.log(
-            gt_xyzhwlr[id_pos_gt, 4] / self.anchors[id_pos, 4])
-        targets[index_x, index_y, np.array(index_z) * 7 + 5] = np.log(
-            gt_xyzhwlr[id_pos_gt, 5] / self.anchors[id_pos, 5])
-        targets[index_x, index_y, np.array(index_z) * 7 + 6] = (
-                gt_xyzhwlr[id_pos_gt, 6] - self.anchors[id_pos, 6])
-        index_x, index_y, index_z = np.unravel_index(
-            id_neg, (*self.feature_map_shape, self.anchors_per_vox))
+        
+        targets[index_x, index_y, np.array(index_z) * 7] = (gt_xyzhwlr[id_pos_gt, 0] - self.anchors[id_pos, 0]) / anchors_d[id_pos]
+        targets[index_x, index_y, np.array(index_z) * 7 + 1] = (gt_xyzhwlr[id_pos_gt, 1] - self.anchors[id_pos, 1]) / anchors_d[id_pos]
+        targets[index_x, index_y, np.array(index_z) * 7 + 2] =(gt_xyzhwlr[id_pos_gt, 2] - self.anchors[id_pos, 2]) / self.anchors[id_pos, 3]
+        targets[index_x, index_y, np.array(index_z) * 7 + 3] = np.log(gt_xyzhwlr[id_pos_gt, 3] / self.anchors[id_pos, 3])
+        targets[index_x, index_y, np.array(index_z) * 7 + 4] = np.log(gt_xyzhwlr[id_pos_gt, 4] / self.anchors[id_pos, 4])
+        targets[index_x, index_y, np.array(index_z) * 7 + 5] = np.log(gt_xyzhwlr[id_pos_gt, 5] / self.anchors[id_pos, 5])
+        targets[index_x, index_y, np.array(index_z) * 7 + 6] = (gt_xyzhwlr[id_pos_gt, 6] - self.anchors[id_pos, 6])
+        index_x, index_y, index_z = np.unravel_index(id_neg, (*self.feature_map_shape, self.anchors_per_vox))
         neg_equal_one[index_x, index_y, index_z] = 1
         # to avoid a box be pos/neg in the same time
-        index_x, index_y, index_z = np.unravel_index(
-            id_highest, (*self.feature_map_shape, self.anchors_per_vox))
+        index_x, index_y, index_z = np.unravel_index(id_highest, (*self.feature_map_shape, self.anchors_per_vox))
         neg_equal_one[index_x, index_y, index_z] = 0
         return pos_equal_one, neg_equal_one, targets
 
-    def voxelize(self, lidar): #preprocessing
+    def voxelize_inset(self, lidar): #preprocessing
         np.random.shuffle(lidar)
         voxel_coords = ((lidar[:, :3] - np.array([self.range_x[0], self.range_y[0], self.range_z[0]])) / (
                         self.vox_width, self.vox_height, self.vox_depth)).astype(np.int32)
@@ -166,35 +158,36 @@ class KITDataset(data.Dataset):
         return voxel_features, voxel_coords
                            
     def __getitem__(self, index):
-        image_file_path, lidar_file_path, calib_file_path, label_file_path = generate_file_path(index,self.data_root_path)
+       
+        image_file_path, lidar_file_path, calib_file_path, label_file_path = generate_file_path(self.file_paths[index],self.data_root_path,mode=self.setting)
         
-        lidars = read_velodyne_points(lidar_file_path)
-        #lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z)         
-        image = cv2.imread(image_file_path)  
-        if self.setting =='train':
-            calib = read_cal(calib_file_path)['Tr_velo_to_cam']
-            gt_box3d = read_label(label_file_path,calib,self.classes)        
+        lidars,_ = read_velodyne_points(lidar_file_path)
+        #lidars,_ = prepare_velodyne_points(lidars, range_x = self.range_x,range_y = self.range_y, range_z = self.range_z) 
+        #print(lidars)
+        image = cv2.imread(image_file_path)
+        calib = read_cal(calib_file_path)
+        Tr = calib['Tr_velo_to_cam']
+        if self.setting =='training':
+            
+            gt_box3d = read_label(label_file_path,Tr,self.classes)        
             # online data augmentation
-            lidars, gt_box3d = aug_data(lidars, gt_box3d)
-            # specify a range
-            lidars, gt_box3d = get_filtered_lidar(lidars, gt_box3d)
+            lidars, gt_box3d = get_filtered_lidar(*aug(lidars, gt_box3d))
             # voxelize
-            voxel_features, voxel_coords = self.voxelize(lidars)
+            voxel_features, voxel_coords = self.voxelize_inset(lidars)
             # bounding-box encoding
             pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             return voxel_features, voxel_coords, pos_equal_one, neg_equal_one, targets, image, calib, self.file_paths[index]
 
-        elif self.setting == 'val' or self.setting == 'val2':
-            calib = read_cal(calib_file_path)
-            gt_box3d = read_label(label_file_path,calib['Tr_velo_to_cam'],self.classes)
+        elif self.setting == 'validation':
+            gt_box3d = read_label(label_file_path,Tr,self.classes)
             lidars,gt_box3d = get_filtered_lidar(lidars, gt_box3d)
             gt_box3d = box3d_corner_to_center_batch(gt_box3d)
             #lidars, gt_box3d = aug_data(lidars, gt_box3d)
-            voxel_features, voxel_coords = self.voxelize(lidars)
+            voxel_features, voxel_coords = self.voxelize_inset(lidars)
             #pos_equal_one, neg_equal_one, targets = self.cal_target(gt_box3d)
             return voxel_features, voxel_coords, gt_box3d, image, lidars, calib, self.file_paths[index]
         else:
-            voxel_features, voxel_coords = self.voxelize(lidars)
+            voxel_features, voxel_coords = self.voxelize_inset(lidars)
             return voxel_features, voxel_coords
 
     def __len__(self):

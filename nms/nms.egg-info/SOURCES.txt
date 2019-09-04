@@ -1,0 +1,8 @@
+README.md
+nms.cpp
+nms_kernel.cu
+setup.py
+nms.egg-info/PKG-INFO
+nms.egg-info/SOURCES.txt
+nms.egg-info/dependency_links.txt
+nms.egg-info/top_level.txt

@@ -1,10 +1,18 @@
-if_cuda: 0
-batch_size: 1
+if_cuda: 1
+net_type : 1
+batch_size: 2
+batch_size_test: 1
 if_continued: 0
-lr: 0.01
-alpha: 1.5
-beta: 1
+lr: 0.001
+alpha: 1
+beta: 10
+lambda: 3
+lr_ds_interval_epoch: 8
+lr_ds_coeff: 0.8
+clip_grad_thres: 8.4
+chk_save_interval: 2
 epoch: 150
+chk_name: "chk_CV_latest.pth"
 chk_pth: "./checkpoints"
 chk_pth_infer: "./checkpoints/"
 
@@ -67,6 +75,6 @@ ANCHOR_H : 1.56
 
 classes:
     - "Car"
-    #- "Van"
+    - "Van"
     #- "Cyclist"
     #- "Pedestrian"
